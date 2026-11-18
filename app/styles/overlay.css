@@ -96,7 +96,8 @@ button:disabled { opacity: .55; cursor: default; }
 .panel-tabs button[aria-selected="true"] { background: #dccbff; color: #241837; border-color: #dccbff; }
 #selected-agent-name { margin: 0; padding-left: 10px; border-left: 1px solid #514a64; color: #dccbff; font-size: clamp(13px, .85vw, 17px); flex-shrink: 0; }
 .tab-pane { flex: 1 1 0; min-height: 0; min-width: 0; overflow: auto; padding: 6px; }
-.tab-pane#pane-anuncios-locais { display: block; overflow-x: hidden; overflow-y: auto; font-size: clamp(16px, 1.15vw, 23px); }
+.tab-pane#pane-anuncios-locais { display: block; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; font-size: clamp(16px, 1.15vw, 23px); }
+.tab-pane#pane-anuncios-locais::-webkit-scrollbar { display: none; }
 .tab-pane h2 { margin: 0 0 16px; font-size: clamp(24px, 2vw, 38px); }
 .tab-description { margin: 0 0 20px; line-height: 1.4; color: #d2cddd; }
 .merlin-setting { display: flex; flex-direction: column; gap: 8px; max-width: 900px; margin: 0 0 20px; }
