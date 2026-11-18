@@ -137,44 +137,46 @@
         const settings = Object.fromEntries(KEYS.map(key => [key, localStorage.getItem(key)]));
         const documentData = { format: FORMAT, version: VERSION, exportedAt: new Date().toISOString(), settings };
         const json = JSON.stringify(documentData, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
         const filename = `AssistenteHall-configuracoes-${new Date().toISOString().slice(0, 10)}.json`;
         if (typeof window.showSaveFilePicker !== 'function') {
           this.showExportData(json);
           return;
         }
-        if (typeof window.showSaveFilePicker === 'function') {
-          try {
-            const handle = await window.showSaveFilePicker({
-              suggestedName: filename,
-              types: [{ description: 'Arquivo de configurações JSON', accept: { 'application/json': ['.json'] } }]
-            });
-            const writable = await handle.createWritable();
-            await writable.write(blob);
-            await writable.close();
-            this.status.textContent = 'Configurações salvas no local escolhido. O cache de masterizações não foi incluído.';
-            return;
-          } catch (error) {
-            if (error.name === 'AbortError') {
-              this.status.textContent = 'Exportação cancelada.';
-              return;
-            }
-            if (error.name !== 'NotSupportedError' && error.name !== 'SecurityError' && error.name !== 'NotAllowedError') throw error;
-            this.showExportData(json);
+        let writable = null;
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{ description: 'Arquivo de configurações JSON', accept: { 'application/json': ['.json'] } }]
+          });
+          writable = await handle.createWritable();
+          await writable.write(json);
+          await writable.close();
+          const savedFile = await handle.getFile();
+          if (savedFile.size !== new Blob([json]).size) {
+            this.showExportData(json, 'O arquivo criado ficou vazio ou incompleto.');
             return;
           }
+          this.status.textContent = 'Configurações salvas no local escolhido. O cache de masterizações não foi incluído.';
+        } catch (error) {
+          try { await writable?.abort(); } catch {}
+          if (error.name === 'AbortError') {
+            this.status.textContent = 'Exportação cancelada.';
+            return;
+          }
+          this.showExportData(json, 'O OBS não conseguiu gravar o arquivo diretamente.');
         }
       } catch (error) {
         this.status.textContent = `Não foi possível exportar as configurações: ${error.message}`;
       }
     }
 
-    showExportData(json) {
+    showExportData(json, notice = '') {
       this.exportData.value = json;
       this.exportData.hidden = false;
       this.exportLabel.hidden = false;
       document.getElementById('copy-settings').hidden = false;
       this.copyExport();
+      if (notice) this.status.textContent = `${notice} ${this.status.textContent}`;
     }
 
     copyExport() {
