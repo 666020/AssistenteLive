@@ -1,3 +1,6 @@
+AssistenteLive overlay 0.24.50 — confirmação de exclusão local dentro do painel
+A exclusão agora confirma dentro do painel, sem depender de janela bloqueada pelo navegador embutido do OBS.
+
 AssistenteLive overlay 0.24.49 — barra de progresso no carregamento
 A tela mostra o progresso enquanto os Agents são baixados e some quando todos terminam. O painel pode ser aberto durante o carregamento.
 
