@@ -1,3 +1,6 @@
+AssistenteLive overlay 0.24.47 — prévia ao vivo de anúncios locais e correção do texto em negrito
+Atualize pelo ZIP AssistenteLive-OBS-0.24.47.zip. O editor local mostra o balão junto do formulário; a formatação permanece alinhada na prévia.
+
 AssistenteLive overlay 0.24.46 — anúncios sem título e formatação de mensagens
 Atualize pelo ZIP AssistenteLive-OBS-0.24.46.zip. Anúncios mostram somente a mensagem; mensagens e modelos aceitam {b}, {i}, {u} e {s}.
 

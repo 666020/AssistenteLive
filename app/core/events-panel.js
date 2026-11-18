@@ -23,6 +23,14 @@
       this.localList = document.getElementById('local-announcement-list');
       this.localMessageInput = document.getElementById('local-announcement-message');
       this.localImageInput = document.getElementById('local-announcement-image');
+      this.localEditorPreview = document.getElementById('local-announcement-preview');
+      this.localEditorPreviewMessage = document.getElementById('local-announcement-preview-message');
+      this.localEditorPreviewImage = this.localEditorPreview.querySelector('.event-announcement-image');
+      this.localEditorPreviewImage.addEventListener('error', () => { this.localEditorPreviewImage.hidden = true; });
+      this.localEditorPreviewImage.addEventListener('load', () => {
+        this.localEditorPreviewImage.hidden = false;
+        if (app.merlinSettings?.imageLayout?.().size === 'auto') app.fitImagesToText(this.localEditorPreview, this.localEditorPreviewMessage, '.event-announcement-image');
+      });
       this.localSaveButton = document.getElementById('local-announcement-save');
       this.localCancelButton = document.getElementById('local-announcement-cancel');
       this.localEditorTitle = document.getElementById('local-announcement-editor-title');
@@ -70,6 +78,9 @@
       this.newEventDefaultSelected = true;
       this.imagePosition = 'left';
       this.localImagePosition = this.loadLocalImagePosition();
+      this.localMessageInput.addEventListener('input', () => this.updateLocalEditorPreview());
+      this.localImageInput.addEventListener('input', () => this.updateLocalEditorPreview());
+      this.updateLocalEditorPreview();
       this.loadSelection();
       this.loadImagePosition();
       this.loadNewEventDefault();
@@ -95,6 +106,7 @@
           try { localStorage.setItem('AssistenteLive.localEventImagePosition.v1', this.localImagePosition); }
           catch { document.getElementById('storage-note').textContent = 'Não foi possível salvar a posição da imagem dos anúncios locais neste OBS.'; }
           this.renderLocalAnnouncements();
+          this.updateLocalEditorPreview();
         });
       }
       for (const input of this.newEventDefaultInputs) {
@@ -199,6 +211,7 @@
       this.editingLocalId = id;
       this.localMessageInput.value = event.message;
       this.localImageInput.value = event.imageUrl;
+      this.updateLocalEditorPreview();
       this.localEditorTitle.textContent = 'Editar anúncio';
       this.localSaveButton.textContent = 'Salvar alterações';
       this.localCancelButton.hidden = false;
@@ -212,6 +225,40 @@
       this.localEditorTitle.textContent = 'Criar anúncio';
       this.localSaveButton.textContent = 'Adicionar anúncio';
       this.localCancelButton.hidden = true;
+      this.updateLocalEditorPreview();
+    }
+
+    updateLocalEditorPreview() {
+      if (!this.localEditorPreview) return;
+      const layout = app.merlinSettings?.imageLayout?.() || {};
+      const bubbleWidth = layout.bubbleWidth === 'auto' ? 'max' : layout.bubbleWidth || 'max';
+      const size = ['small', 'medium', 'large', 'auto'].includes(layout.size) ? layout.size : 'medium';
+      const fontSize = ['small', 'medium', 'large', 'xlarge'].includes(layout.fontSize) ? layout.fontSize : 'medium';
+      const fontFamily = ['arial', 'verdana', 'trebuchet', 'georgia', 'courier'].includes(layout.fontFamily) ? layout.fontFamily : 'arial';
+      this.localEditorPreview.className = `event-announcement-preview image-${this.localImagePosition} image-size-${size} message-width-${bubbleWidth} mastery-text-${fontSize} message-font-${fontFamily}`;
+      this.localEditorPreview.style.setProperty('--message-width', `${bubbleWidth === 'max' ? 0 : bubbleWidth}px`);
+      app.merlinSettings?.applyBubbleColor?.(this.localEditorPreview, layout.bubbleColor);
+      const message = this.localMessageInput.value.trim();
+      this.localEditorPreviewMessage.replaceChildren();
+      app.appendFormattedText(this.localEditorPreviewMessage, message || 'Sua mensagem aparecerá aqui.');
+      const imageUrl = this.localImageUrl(this.localImageInput.value);
+      if (imageUrl && this.localEditorPreviewImage.dataset.previewUrl !== imageUrl) {
+        this.localEditorPreviewImage.dataset.previewUrl = imageUrl;
+        this.localEditorPreviewImage.hidden = false;
+        this.localEditorPreviewImage.src = imageUrl;
+      } else if (!imageUrl) {
+        this.localEditorPreviewImage.hidden = true;
+        this.localEditorPreviewImage.removeAttribute('src');
+        delete this.localEditorPreviewImage.dataset.previewUrl;
+      }
+      if (size === 'auto') {
+        app.fitImagesToText(this.localEditorPreview, this.localEditorPreviewMessage, '.event-announcement-image');
+      } else {
+        this.localEditorPreviewImage.style.removeProperty('width');
+        this.localEditorPreviewImage.style.removeProperty('height');
+        this.localEditorPreviewImage.style.removeProperty('flex-basis');
+        this.localEditorPreviewImage.style.removeProperty('visibility');
+      }
     }
 
     deleteLocalAnnouncement(id) {
@@ -392,7 +439,7 @@
       this.fitAutoImages();
     }
 
-    onOpen() { this.fitAutoImages(); }
+    onOpen() { this.fitAutoImages(); this.updateLocalEditorPreview(); }
 
     fitAutoImages() {
       if (app.merlinSettings?.imageLayout?.().size !== 'auto') return;

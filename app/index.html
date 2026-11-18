@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AssistenteLive — 0.24.46 · Formatação das mensagens e anúncios sem título</title>
+  <title>AssistenteLive — 0.24.47 · Prévia ao vivo das mensagens</title>
   <link rel="stylesheet" href="styles/overlay.css">
   <script defer src="agents/merlin/merlin-data.js"></script>
   <script defer src="agents/clippy/clippy-data.js"></script>
@@ -43,7 +43,7 @@
   </main>
   <section id="settings" aria-labelledby="panel-title" hidden>
     <header class="panel-header">
-      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.46</span><p id="selected-agent-name">Carregando…</p></div>
+      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.47</span><p id="selected-agent-name">Carregando…</p></div>
       <button id="close-panel" type="button" aria-label="Fechar painel">Fechar · F1</button>
     </header>
     <nav class="panel-tabs" role="tablist" aria-label="Seções do painel">
@@ -195,16 +195,27 @@
       </fieldset>
       <fieldset class="local-announcement-editor">
         <legend id="local-announcement-editor-title">Criar anúncio</legend>
-        <label for="local-announcement-message">Mensagem</label>
-        <textarea id="local-announcement-message" rows="3" maxlength="350" placeholder="Escreva a mensagem para a live"></textarea>
-        <p class="setting-hint">Formatação: {b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}.</p>
-        <label for="local-announcement-image">Imagem (URL, opcional)</label>
-        <input id="local-announcement-image" type="url" maxlength="2048" autocomplete="url" placeholder="https://…">
-        <div class="local-announcement-editor-actions">
-          <button id="local-announcement-save" type="button">Adicionar anúncio</button>
-          <button id="local-announcement-cancel" type="button" hidden>Cancelar edição</button>
+        <div class="local-announcement-editor-layout">
+          <div class="local-announcement-editor-fields">
+            <label for="local-announcement-message">Mensagem</label>
+            <textarea id="local-announcement-message" rows="3" maxlength="350" placeholder="Escreva a mensagem para a live"></textarea>
+            <p class="setting-hint">Formatação: {b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}.</p>
+            <label for="local-announcement-image">Imagem (URL, opcional)</label>
+            <input id="local-announcement-image" type="url" maxlength="2048" autocomplete="url" placeholder="https://…">
+            <div class="local-announcement-editor-actions">
+              <button id="local-announcement-save" type="button">Adicionar anúncio</button>
+              <button id="local-announcement-cancel" type="button" hidden>Cancelar edição</button>
+            </div>
+            <p id="local-announcement-status" class="setting-hint" role="status" aria-live="polite">As mensagens ficam salvas neste OBS.</p>
+          </div>
+          <aside class="local-announcement-editor-preview" aria-label="Prévia do anúncio local">
+            <h3>Prévia do balão</h3>
+            <div id="local-announcement-preview" class="event-announcement-preview image-left image-size-medium message-width-max mastery-text-medium message-font-arial">
+              <img class="event-announcement-image" alt="" hidden>
+              <div class="event-announcement-text"><p id="local-announcement-preview-message">Sua mensagem aparecerá aqui.</p></div>
+            </div>
+          </aside>
         </div>
-        <p id="local-announcement-status" class="setting-hint" role="status" aria-live="polite">As mensagens ficam salvas neste OBS.</p>
       </fieldset>
       <div class="local-announcement-controls">
         <button id="local-announcement-select-all" type="button">Selecionar locais</button>
