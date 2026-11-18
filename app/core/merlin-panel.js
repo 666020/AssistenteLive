@@ -133,10 +133,13 @@
         if (!record || (memberId && record.memberId !== memberId)) continue;
         item.querySelector(':scope > strong').textContent = `${settings.memberName(record.memberId, record.member)} — ${record.game}`;
         const text = item.querySelector('.mastery-text');
-        if (text) text.textContent = app.merlinMessage.render(settings.value.template, {
-          Membro: settings.memberName(record.memberId, record.member), Jogo: record.game, Console: settings.consoleName(record.console),
-          Tempo: record.time, Evento: record.activity
-        }, settings.value.timeFormat);
+        if (text) {
+          text.replaceChildren();
+          app.appendFormattedText(text, app.merlinMessage.render(settings.value.template, {
+            Membro: settings.memberName(record.memberId, record.member), Jogo: record.game, Console: settings.consoleName(record.console),
+            Tempo: record.time, Evento: record.activity
+          }, settings.value.timeFormat));
+        }
       }
       if (memberId && this.collectedList) {
         for (const row of this.collectedList.querySelectorAll('tr')) {
@@ -492,10 +495,10 @@
       }
       const text = document.createElement('p');
       text.className = 'mastery-text';
-      text.textContent = app.merlinMessage.render(settings.value.template, {
+      app.appendFormattedText(text, app.merlinMessage.render(settings.value.template, {
         Membro: settings.memberName(record.memberId, record.member), Jogo: record.game, Console: settings.consoleName(record.console),
         Tempo: record.time, Evento: record.activity
-      }, settings.value.timeFormat);
+      }, settings.value.timeFormat));
       bubble.append(text);
       return bubble;
     }

@@ -177,7 +177,7 @@
     return [...created.map(event => ({ ...event, source: 'created' })), ...hall];
   };
   app.makeEventMessage = function (event) {
-    const text = `${event.title}\n${event.message}`;
+    const text = event.message;
     let position = event.imagePosition === 'right' ? 'right' : 'left';
     if (event.imagePosition !== 'left' && event.imagePosition !== 'right') {
       try { if (localStorage.getItem('AssistenteLive.eventImagePosition.v1') === 'right') position = 'right'; } catch {}

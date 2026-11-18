@@ -21,7 +21,6 @@
       this.stopButton = document.getElementById('stop-events');
       this.list = document.getElementById('event-announcements');
       this.localList = document.getElementById('local-announcement-list');
-      this.localTitleInput = document.getElementById('local-announcement-title');
       this.localMessageInput = document.getElementById('local-announcement-message');
       this.localImageInput = document.getElementById('local-announcement-image');
       this.localSaveButton = document.getElementById('local-announcement-save');
@@ -138,9 +137,9 @@
           if (!item || typeof item !== 'object') return [];
           const id = String(item.id || '').slice(0, 100);
           const title = String(item.title || '').trim().slice(0, 100);
-          const message = String(item.message || '').trim().slice(0, 350);
+          const message = String(item.message || item.title || '').trim().slice(0, 350);
           const imageUrl = this.localImageUrl(item.imageUrl);
-          return id && title && message ? [{ id, title, message, imageUrl, source: 'local' }] : [];
+          return id && message ? [{ id, title: '', message, imageUrl, source: 'local' }] : [];
         });
       } catch { return []; }
     }
@@ -170,16 +169,15 @@
     }
 
     saveLocalAnnouncement() {
-      const title = this.localTitleInput.value.trim();
       const message = this.localMessageInput.value.trim();
       const rawImage = this.localImageInput.value.trim();
       const imageUrl = this.localImageUrl(rawImage);
-      if (!title || !message) { this.localStatus.textContent = 'Preencha o título e a mensagem.'; return; }
-      if (title.length > 100 || message.length > 350 || rawImage && !imageUrl) {
-        this.localStatus.textContent = 'Confira os limites: título até 100 caracteres, mensagem até 350 e imagem por URL HTTP ou HTTPS.'; return;
+      if (!message) { this.localStatus.textContent = 'Escreva a mensagem.'; return; }
+      if (message.length > 350 || rawImage && !imageUrl) {
+        this.localStatus.textContent = 'Confira os limites: mensagem até 350 caracteres e imagem por URL HTTP ou HTTPS.'; return;
       }
       const id = this.editingLocalId || `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-      const updated = { id, title, message, imageUrl, source: 'local' };
+      const updated = { id, title: '', message, imageUrl, source: 'local' };
       const index = this.localEvents.findIndex(event => event.id === id);
       if (index >= 0) this.localEvents[index] = updated;
       else this.localEvents.push(updated);
@@ -191,7 +189,7 @@
 
     persistLocalAnnouncements() {
       try {
-        localStorage.setItem(LOCAL_ANNOUNCEMENTS_KEY, JSON.stringify(this.localEvents.map(({ id, title, message, imageUrl }) => ({ id, title, message, imageUrl }))));
+        localStorage.setItem(LOCAL_ANNOUNCEMENTS_KEY, JSON.stringify(this.localEvents.map(({ id, message, imageUrl }) => ({ id, message, imageUrl }))));
       } catch { this.localStatus.textContent = 'Não foi possível salvar os anúncios locais neste OBS.'; }
     }
 
@@ -199,18 +197,16 @@
       const event = this.localEvents.find(item => item.id === id);
       if (!event) return;
       this.editingLocalId = id;
-      this.localTitleInput.value = event.title;
       this.localMessageInput.value = event.message;
       this.localImageInput.value = event.imageUrl;
       this.localEditorTitle.textContent = 'Editar anúncio';
       this.localSaveButton.textContent = 'Salvar alterações';
       this.localCancelButton.hidden = false;
-      this.localTitleInput.focus();
+      this.localMessageInput.focus();
     }
 
     resetLocalEditor() {
       this.editingLocalId = '';
-      this.localTitleInput.value = '';
       this.localMessageInput.value = '';
       this.localImageInput.value = '';
       this.localEditorTitle.textContent = 'Criar anúncio';
@@ -220,7 +216,7 @@
 
     deleteLocalAnnouncement(id) {
       const event = this.localEvents.find(item => item.id === id);
-      if (!event || !window.confirm(`Excluir o anúncio local “${event.title}”?`)) return;
+      if (!event || !window.confirm(`Excluir a mensagem local “${event.message.slice(0, 80)}”?`)) return;
       const key = eventKey(event);
       this.localEvents = this.localEvents.filter(item => item.id !== id);
       this.selectedKeys.delete(key); this.knownKeys.delete(key);
@@ -319,13 +315,13 @@
         const card = document.createElement('article'); card.className = 'event-announcement-card';
         const label = document.createElement('label'); label.className = 'event-announcement-choice';
         const input = document.createElement('input'); input.type = 'checkbox'; input.checked = this.selectedKeys.has(key);
-        input.setAttribute('aria-label', `Incluir ${event.title} nos anúncios`);
+        input.setAttribute('aria-label', `Incluir mensagem: ${event.message.slice(0, 80)}`);
+        input.setAttribute('aria-label', `Incluir mensagem: ${event.message.slice(0, 80)}`);
         input.addEventListener('change', () => {
           if (input.checked) this.selectedKeys.add(key); else this.selectedKeys.delete(key);
           this.saveSelection(); this.renderLocalAnnouncements(); this.update(); this.updateStatusCount();
         });
-        const title = document.createElement('strong'); title.textContent = event.title;
-        label.append(input, title); card.append(label);
+        label.append(input); card.append(label);
         const layout = app.merlinSettings?.imageLayout?.() || {};
         const preview = document.createElement('div');
         app.merlinSettings?.applyBubbleColor?.(preview, layout.bubbleColor);
@@ -342,9 +338,8 @@
           preview.append(image);
         }
         const text = document.createElement('div'); text.className = 'event-announcement-text';
-        const previewTitle = document.createElement('strong'); previewTitle.textContent = event.title;
-        const message = document.createElement('p'); message.textContent = event.message;
-        text.append(previewTitle, message); preview.append(text); card.append(preview);
+        const message = document.createElement('p'); app.appendFormattedText(message, event.message);
+        text.append(message); preview.append(text); card.append(preview);
         card.dataset.position = String(index); fragment.append(card);
         }
       }
@@ -369,13 +364,12 @@
         const card = document.createElement('article'); card.className = 'event-announcement-card local-announcement-card';
         const label = document.createElement('label'); label.className = 'event-announcement-choice';
         const input = document.createElement('input'); input.type = 'checkbox'; input.checked = this.selectedKeys.has(key);
-        input.setAttribute('aria-label', `Incluir ${event.title} na sequência automática`);
+        input.setAttribute('aria-label', `Incluir mensagem: ${event.message.slice(0, 80)}`);
         input.addEventListener('change', () => {
           if (input.checked) this.selectedKeys.add(key); else this.selectedKeys.delete(key);
           this.saveSelection(); this.renderEvents(); this.update(); this.updateStatusCount();
         });
-        const title = document.createElement('strong'); title.textContent = event.title;
-        label.append(input, title); card.append(label);
+        label.append(input); card.append(label);
         const preview = document.createElement('div');
         app.merlinSettings?.applyBubbleColor?.(preview, layout.bubbleColor);
         const bubbleWidth = layout.bubbleWidth === 'auto' ? 'max' : layout.bubbleWidth || 'max';
@@ -387,9 +381,8 @@
           image.addEventListener('error', () => image.remove(), { once: true }); preview.append(image);
         }
         const text = document.createElement('div'); text.className = 'event-announcement-text';
-        const previewTitle = document.createElement('strong'); previewTitle.textContent = event.title;
-        const message = document.createElement('p'); message.textContent = event.message;
-        text.append(previewTitle, message); preview.append(text); card.append(preview);
+        const message = document.createElement('p'); app.appendFormattedText(message, event.message);
+        text.append(message); preview.append(text); card.append(preview);
         const actions = document.createElement('div'); actions.className = 'local-announcement-card-actions';
         const edit = document.createElement('button'); edit.type = 'button'; edit.textContent = 'Editar'; edit.addEventListener('click', () => this.editLocalAnnouncement(event.id));
         const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Excluir'; remove.addEventListener('click', () => this.deleteLocalAnnouncement(event.id));

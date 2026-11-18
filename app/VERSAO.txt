@@ -1,3 +1,6 @@
+AssistenteLive overlay 0.24.46 — anúncios sem título e formatação de mensagens
+Atualize pelo ZIP AssistenteLive-OBS-0.24.46.zip. Anúncios mostram somente a mensagem; mensagens e modelos aceitam {b}, {i}, {u} e {s}.
+
 AssistenteLive overlay 0.24.45 — imagem automática pela altura do texto
 Atualize pelo ZIP AssistenteLive-OBS-0.24.45.zip. O tamanho automático da imagem é calculado pela altura total do texto; a largura não limita mais a imagem.
 

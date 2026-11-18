@@ -522,15 +522,17 @@
     }
     refreshPreview() {
       this.applyBubbleColor(this.previewBubble);
-      this.preview.textContent = this.previewRecords.length
+      const previewText = this.previewRecords.length
         ? this.previewRecord.announcement
-          ? `${this.previewRecord.title}\n${this.previewRecord.message}`
+          ? this.previewRecord.message
           : render(this.template.value, {
             ...this.previewRecord,
             Membro: this.memberName(this.previewRecord.memberId, this.previewRecord.member || this.previewRecord.Membro),
             Console: this.consoleName(this.previewRecord.console)
           }, this.selected(this.timeFormats) || DEFAULTS.timeFormat)
         : 'Aguardando masterizações da planilha…';
+      this.preview.replaceChildren();
+      app.appendFormattedText(this.preview, previewText);
       this.previewBubble.classList.remove('image-size-small', 'image-size-medium', 'image-size-large', 'image-size-auto');
       this.previewBubble.classList.add(`image-size-${this.value.imageSize}`);
       this.previewBubble.classList.remove('message-width-auto', 'message-width-320', 'message-width-400', 'message-width-480', 'message-width-640', 'message-width-800', 'message-width-1000', 'message-width-1200', 'message-width-max');

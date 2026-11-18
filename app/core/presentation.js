@@ -54,7 +54,7 @@
           }
           const text = document.createElement('span');
           text.className = 'mastery-text';
-          text.textContent = item.text;
+          app.appendFormattedText(text, item.text);
           this.bubble.append(text);
           this.bubble.hidden = false;
           void app.playAnnouncementSound?.(item.soundCategory || (item.mastery === false ? 'announcements' : 'masterizations'));

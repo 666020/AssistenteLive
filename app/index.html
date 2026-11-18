@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AssistenteLive — 0.24.45 · Imagem automática pela altura do texto</title>
+  <title>AssistenteLive — 0.24.46 · Formatação das mensagens e anúncios sem título</title>
   <link rel="stylesheet" href="styles/overlay.css">
   <script defer src="agents/merlin/merlin-data.js"></script>
   <script defer src="agents/clippy/clippy-data.js"></script>
@@ -18,6 +18,7 @@
   <script defer src="agents/catalog.js"></script>
   <script defer src="data/masterizacoes-teste.js"></script>
   <script defer src="core/messages.js"></script>
+  <script defer src="core/text-format.js"></script>
   <script defer src="data/eventos-config.js"></script>
   <script defer src="core/events.js"></script>
   <script defer src="core/events-panel.js"></script>
@@ -42,7 +43,7 @@
   </main>
   <section id="settings" aria-labelledby="panel-title" hidden>
     <header class="panel-header">
-      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.45</span><p id="selected-agent-name">Carregando…</p></div>
+      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.46</span><p id="selected-agent-name">Carregando…</p></div>
       <button id="close-panel" type="button" aria-label="Fechar painel">Fechar · F1</button>
     </header>
     <nav class="panel-tabs" role="tablist" aria-label="Seções do painel">
@@ -145,6 +146,7 @@
         <p class="tab-description">O intervalo vale para todos os anúncios selecionados. 0 desativa a apresentação automática. Abrir o painel com F1 pausa a apresentação.</p>
       </section>
       <p class="tab-description">Marque quais mensagens podem ser anunciadas automaticamente.</p>
+      <p class="setting-hint">As mensagens aceitam {b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}.</p>
       <fieldset class="event-image-options">
         <legend>Novos anúncios vêm</legend>
         <div class="merlin-option-list">
@@ -193,10 +195,9 @@
       </fieldset>
       <fieldset class="local-announcement-editor">
         <legend id="local-announcement-editor-title">Criar anúncio</legend>
-        <label for="local-announcement-title">Título</label>
-        <input id="local-announcement-title" type="text" maxlength="100" autocomplete="off" placeholder="Ex.: Bebam água">
         <label for="local-announcement-message">Mensagem</label>
-        <textarea id="local-announcement-message" rows="3" maxlength="350" placeholder="Escreva o lembrete para a live"></textarea>
+        <textarea id="local-announcement-message" rows="3" maxlength="350" placeholder="Escreva a mensagem para a live"></textarea>
+        <p class="setting-hint">Formatação: {b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}.</p>
         <label for="local-announcement-image">Imagem (URL, opcional)</label>
         <input id="local-announcement-image" type="url" maxlength="2048" autocomplete="url" placeholder="https://…">
         <div class="local-announcement-editor-actions">
@@ -229,6 +230,7 @@
       <div class="merlin-setting merlin-template-setting">
         <label for="merlin-template">Modelo da mensagem</label>
           <textarea id="merlin-template" rows="2" maxlength="500" spellcheck="false">{Membro} platinou {Jogo} ({Console}) em {Tempo} — {Evento}</textarea>
+        <p class="setting-hint">Formatação: {b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}.</p>
           <p class="setting-hint">Chaves: <code>{Membro}</code>, <code>{Jogo}</code>, <code>{Console}</code>, <code>{Tempo}</code> e <code>{Evento}</code>.</p>
           <label for="merlin-reading-seconds">Tempo de exibição da mensagem (segundos)</label>
           <input id="merlin-reading-seconds" type="number" min="3" max="120" step="1" value="12">
