@@ -128,7 +128,7 @@
       this.localSelectAllButton.addEventListener('click', () => this.setSelection([...this.selectedKeys, ...this.localEvents.map(eventKey)]));
       this.localSelectNoneButton.addEventListener('click', () => this.setSelection([...this.selectedKeys].filter(key => !this.localEvents.some(event => eventKey(event) === key))));
       this.localAnnounceButton.addEventListener('click', () => {
-        const selected = this.selectedEvents().filter(event => event.source === 'local');
+        const selected = this.selectedLocalEvents();
         if (!this.selector.busy && selected.length && this.selector.presenterIds.length) void this.runQueue(this.selector.selected, selected);
       });
       this.localStopButton.addEventListener('click', () => {
@@ -138,6 +138,7 @@
       });
       selector.events = this;
       this.setActiveEvents([]);
+
       this.update(); this.startBackgroundSync();
     }
 
@@ -278,6 +279,7 @@
         const saved = JSON.parse(localStorage.getItem(SELECTION_KEY) || 'null');
         if (saved && Array.isArray(saved.selected) && Array.isArray(saved.known)) {
           const migrate = value => {
+
             if (typeof value !== 'string') return '';
             try {
               const parts = JSON.parse(value);
@@ -309,7 +311,7 @@
 
     setActiveEvents(events) {
       this.remoteEvents = events.filter(event => event.source !== 'local');
-      this.activeEvents = [...this.remoteEvents, ...this.localEvents];
+      this.activeEvents = this.remoteEvents;
       for (const event of this.activeEvents) {
         const key = eventKey(event);
         if (!this.knownKeys.has(key)) {
@@ -319,7 +321,7 @@
         this.knownKeys.add(key);
       }
       this.saveSelection();
-      app.merlinSettings?.setAnnouncementPreviewRecords(this.activeEvents);
+      app.merlinSettings?.setAnnouncementPreviewRecords(this.remoteEvents);
       this.renderEvents();
       this.update();
     }
@@ -337,6 +339,10 @@
       return this.activeEvents.filter(event => this.selectedKeys.has(eventKey(event)));
     }
 
+    selectedLocalEvents() {
+      return this.localEvents.filter(event => this.selectedKeys.has(eventKey(event)));
+    }
+
     updateStatusCount() {
       if (!this.loading && !this.running && this.activeEvents.length) {
         this.status.textContent = `${this.activeEvents.length} mensagem(ns) ativa(s) · ${this.selectedEvents().length} selecionada(s).`;
@@ -348,7 +354,6 @@
       const groups = [
         { key: 'created', title: 'Anúncios criados', empty: 'Nenhum anúncio criado está ativo.' },
         { key: 'hall-general', title: 'Geral eventos do Hall', empty: 'Nenhum evento do Hall está com status ativo.' },
-        { key: 'local', title: 'Anúncios locais', empty: 'Nenhum anúncio local cadastrado. Crie lembretes na aba Anúncios locais.' }
       ];
       for (const group of groups) {
         const events = this.activeEvents.filter(event => (event.source || 'created') === group.key);
@@ -415,6 +420,7 @@
         input.addEventListener('change', () => {
           if (input.checked) this.selectedKeys.add(key); else this.selectedKeys.delete(key);
           this.saveSelection(); this.renderEvents(); this.update(); this.updateStatusCount();
+
         });
         label.append(input); card.append(label);
         const preview = document.createElement('div');
@@ -490,7 +496,7 @@
       this.selectAllButton.disabled = busy || !hasEvents;
       this.selectNoneButton.disabled = busy || !this.selectedEvents().length;
       this.stopButton.disabled = !this.running || this.stopRequested;
-      const localSelected = this.selectedEvents().some(event => event.source === 'local');
+      const localSelected = this.selectedLocalEvents().length > 0;
       this.localSelectAllButton.disabled = busy || !this.localEvents.length;
       this.localSelectNoneButton.disabled = busy || !localSelected;
       this.localAnnounceButton.disabled = busy || !localSelected || !this.selector.presenterIds.length;
@@ -555,6 +561,7 @@
             ...event,
             readingMs: (local ? this.localReadingSeconds : this.readingSeconds) * 1000,
             ...(local ? { imagePosition: this.localImagePosition } : {})
+
           }, signal);
           app.checkSignal(signal);
           if (success === false) throw new Error('A sequência foi interrompida por uma falha na apresentação.');
