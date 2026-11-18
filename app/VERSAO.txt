@@ -1,3 +1,4 @@
+AssistenteHall 0.24.61 — configuração fornecida aplicada como padrão para novas instalações, preservando preferências já salvas.
 AssistenteHall 0.24.60 — largura configurada respeitada ao lado do Agent; imagens da prévia automática dividem melhor o espaço.
 AssistenteLive overlay 0.24.50 — confirmação de exclusão local dentro do painel
 A exclusão agora confirma dentro do painel, sem depender de janela bloqueada pelo navegador embutido do OBS.
