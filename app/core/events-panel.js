@@ -263,7 +263,7 @@
 
     deleteLocalAnnouncement(id) {
       const event = this.localEvents.find(item => item.id === id);
-      if (!event || !window.confirm(`Excluir a mensagem local “${event.message.slice(0, 80)}”?`)) return;
+      if (!event) return;
       const key = eventKey(event);
       this.localEvents = this.localEvents.filter(item => item.id !== id);
       this.selectedKeys.delete(key); this.knownKeys.delete(key);
@@ -432,7 +432,18 @@
         text.append(message); preview.append(text); card.append(preview);
         const actions = document.createElement('div'); actions.className = 'local-announcement-card-actions';
         const edit = document.createElement('button'); edit.type = 'button'; edit.textContent = 'Editar'; edit.addEventListener('click', () => this.editLocalAnnouncement(event.id));
-        const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Excluir'; remove.addEventListener('click', () => this.deleteLocalAnnouncement(event.id));
+        const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Excluir'; remove.addEventListener('click', () => {
+          const confirmation = document.createElement('div'); confirmation.className = 'local-announcement-delete-confirmation';
+          confirmation.setAttribute('role', 'group'); confirmation.setAttribute('aria-label', 'Confirmar exclusão');
+          const prompt = document.createElement('span'); prompt.textContent = 'Excluir este anúncio local?';
+          const confirm = document.createElement('button'); confirm.type = 'button'; confirm.textContent = 'Confirmar exclusão';
+          confirm.addEventListener('click', () => this.deleteLocalAnnouncement(event.id), { once: true });
+          const cancel = document.createElement('button'); cancel.type = 'button'; cancel.textContent = 'Cancelar';
+          cancel.addEventListener('click', () => { confirmation.remove(); remove.focus(); }, { once: true });
+          confirmation.append(prompt, confirm, cancel);
+          actions.replaceChildren(confirmation);
+          confirm.focus();
+        });
         actions.append(edit, remove); card.append(actions); fragment.append(card);
       }
       this.localList.replaceChildren(fragment);
