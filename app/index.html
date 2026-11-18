@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 9828)
-Total output lines: 465
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -117,6 +114,7 @@ Total output lines: 465
         <div id="agent-animation-list" class="agent-animation-list" aria-live="polite"></div>
         <p id="agent-animation-status" class="setting-hint" role="status" aria-live="polite">Escolha um Agent para configurar a sequência.</p>
       </fieldset>
+
     </section>
     <section id="pane-merlin-fila" class="tab-pane" role="tabpanel" aria-labelledby="tab-merlin-fila" hidden>
       <h2>Masterizações coletadas</h2>
@@ -218,7 +216,41 @@ Total output lines: 465
             </div>
             <p id="local-announcement-status" class="setting-hint" role="status" aria-live="polite">As mensagens ficam salvas neste OBS.</p>
           </div>
-          <aside class="local-announcement-editor…828 tokens truncated…b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}.</p>
+          <aside class="local-announcement-editor-preview" aria-label="Prévia do anúncio local">
+            <h3>Prévia do balão</h3>
+            <div id="local-announcement-preview" class="event-announcement-preview image-left image-size-medium message-width-max mastery-text-medium message-font-arial">
+              <img class="event-announcement-image" alt="" hidden>
+              <div class="event-announcement-text"><p id="local-announcement-preview-message">Sua mensagem aparecerá aqui.</p></div>
+            </div>
+          </aside>
+        </div>
+      </fieldset>
+      <div class="local-announcement-controls">
+        <button id="local-announcement-select-all" type="button">Selecionar locais</button>
+        <button id="local-announcement-select-none" type="button">Desmarcar locais</button>
+        <button id="local-announcement-announce" type="button">Anunciar selecionadas agora</button>
+        <button id="local-announcement-stop" type="button" disabled>Parar sequência</button>
+      </div>
+
+      <p id="local-announcement-count" class="event-announcements-empty"></p>
+      <div id="local-announcement-list" class="event-announcements" aria-live="polite"></div>
+    </section>
+    <section id="pane-merlin" class="tab-pane" role="tabpanel" aria-labelledby="tab-merlin" hidden>
+      <h2>Balão de conversa</h2>
+      <p class="tab-description">Configure o texto, as imagens e a aparência das mensagens. As escolhas ficam salvas neste OBS.</p>
+      <div class="merlin-settings-grid">
+      <fieldset class="merlin-setting merlin-options merlin-color-setting">
+        <legend>Cor do balão</legend>
+        <label for="merlin-bubble-color-picker">Cor de fundo</label>
+        <div class="bubble-color-controls"><input id="merlin-bubble-color-picker" type="color" value="#fffdf5" aria-label="Escolher cor do balão"><input id="merlin-bubble-color-hex" type="text" value="#fffdf5" maxlength="7" spellcheck="false" aria-label="Código hexadecimal da cor"><button id="merlin-bubble-color-reset" type="button">Restaurar padrão</button></div>
+        <div class="bubble-color-swatches" role="group" aria-label="Cores sugeridas">
+          <button type="button" data-bubble-color="#fffdf5" aria-label="Creme" title="Creme"></button><button type="button" data-bubble-color="#ffffff" aria-label="Branco" title="Branco"></button><button type="button" data-bubble-color="#d9c7ff" aria-label="Lavanda" title="Lavanda"></button><button type="button" data-bubble-color="#bfe7ff" aria-label="Azul claro" title="Azul claro"></button><button type="button" data-bubble-color="#c9f2d1" aria-label="Verde claro" title="Verde claro"></button><button type="button" data-bubble-color="#ffe3a3" aria-label="Amarelo claro" title="Amarelo claro"></button><button type="button" data-bubble-color="#ffc7d4" aria-label="Rosa claro" title="Rosa claro"></button><button type="button" data-bubble-color="#302c3e" aria-label="Roxo escuro" title="Roxo escuro"></button>
+        </div>
+      </fieldset>
+      <div class="merlin-setting merlin-template-setting">
+        <label for="merlin-template">Modelo da mensagem</label>
+          <textarea id="merlin-template" rows="2" maxlength="500" spellcheck="false">{Membro} platinou {Jogo} ({Console}) em {Tempo} — {Evento}</textarea>
+        <p class="setting-hint">Formatação: {b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}.</p>
           <p class="setting-hint">Chaves: <code>{Membro}</code>, <code>{Jogo}</code>, <code>{Console}</code>, <code>{Tempo}</code> e <code>{Evento}</code>.</p>
           <label for="merlin-reading-seconds">Tempo de exibição da mensagem (segundos)</label>
           <input id="merlin-reading-seconds" type="number" min="3" max="120" step="1" value="12">
@@ -316,6 +348,7 @@ Total output lines: 465
             <p id="merlin-template-preview" aria-live="polite">Blumzeira platinou Penguin Land (Master System) em 810 horas e 53 minutos — Penguin Land (Master System)</p>
           </div>
         </div>
+
       </div>
       </div>
       <p id="merlin-settings-status" role="status" class="setting-hint">Preferências salvas neste OBS.</p>
@@ -410,3 +443,25 @@ Total output lines: 465
   </section>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
