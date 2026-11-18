@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AssistenteLive — 0.24.51 · Ajuste de imagens</title>
+  <title>AssistenteLive — 0.24.52 · Anúncios separados</title>
   <link rel="stylesheet" href="styles/overlay.css?v=0.24.55">
   <script defer src="agents/merlin/merlin-data.js"></script>
   <script defer src="agents/clippy/clippy-data.js"></script>
@@ -21,8 +21,8 @@
   <script defer src="core/text-format.js"></script>
   <script defer src="data/eventos-config.js"></script>
   <script defer src="core/events.js"></script>
-  <script defer src="core/events-panel.js?v=0.24.54"></script>
-  <script defer src="core/events-auto.js"></script>
+  <script defer src="core/events-panel.js?v=0.24.55"></script>
+  <script defer src="core/events-auto.js?v=0.24.52"></script>
   <script defer src="core/agents.js"></script>
   <script defer src="core/runtime.js"></script>
   <script defer src="core/animation.js"></script>
@@ -50,7 +50,7 @@
   </main>
   <section id="settings" aria-labelledby="panel-title" hidden>
     <header class="panel-header">
-      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.51</span><p id="selected-agent-name">Carregando…</p></div>
+      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.52</span><p id="selected-agent-name">Carregando…</p></div>
       <button id="close-panel" type="button" aria-label="Fechar painel">Fechar · F1</button>
     </header>
     <nav class="panel-tabs" role="tablist" aria-label="Seções do painel">
@@ -98,6 +98,7 @@
             <label><input type="radio" name="agent-message-mode" value="rotate"><span>Alternar entre as escolhidas</span></label>
           </div>
         </div>
+
       </fieldset>
       <fieldset class="agent-animation-editor">
         <legend>Animações do anúncio</legend>
@@ -114,7 +115,6 @@
         <div id="agent-animation-list" class="agent-animation-list" aria-live="polite"></div>
         <p id="agent-animation-status" class="setting-hint" role="status" aria-live="polite">Escolha um Agent para configurar a sequência.</p>
       </fieldset>
-
     </section>
     <section id="pane-merlin-fila" class="tab-pane" role="tabpanel" aria-labelledby="tab-merlin-fila" hidden>
       <h2>Masterizações coletadas</h2>
@@ -199,6 +199,7 @@
         <div class="merlin-option-list">
           <label class="merlin-option"><input type="radio" name="local-image-position" value="left"><span>À esquerda do texto</span></label>
           <label class="merlin-option"><input type="radio" name="local-image-position" value="right"><span>À direita do texto</span></label>
+
         </div>
       </fieldset>
       <fieldset class="local-announcement-editor">
@@ -231,7 +232,6 @@
         <button id="local-announcement-announce" type="button">Anunciar selecionadas agora</button>
         <button id="local-announcement-stop" type="button" disabled>Parar sequência</button>
       </div>
-
       <p id="local-announcement-count" class="event-announcements-empty"></p>
       <div id="local-announcement-list" class="event-announcements" aria-live="polite"></div>
     </section>
@@ -300,6 +300,7 @@
           <div class="merlin-option-list">
             <label class="merlin-option"><input type="radio" name="merlin-member-image-shape" value="square"><span>Quadrada</span></label>
             <label class="merlin-option"><input type="radio" name="merlin-member-image-shape" value="circle"><span>Redonda</span></label>
+
           </div>
         </fieldset>
         <fieldset class="merlin-setting merlin-options">
@@ -348,7 +349,6 @@
             <p id="merlin-template-preview" aria-live="polite">Blumzeira platinou Penguin Land (Master System) em 810 horas e 53 minutos — Penguin Land (Master System)</p>
           </div>
         </div>
-
       </div>
       </div>
       <p id="merlin-settings-status" role="status" class="setting-hint">Preferências salvas neste OBS.</p>
@@ -401,6 +401,7 @@
           </div>
           <div class="merlin-sound-file"><button type="button" data-sound-choose>Escolher arquivo de áudio</button><button type="button" data-sound-remove>Remover arquivo</button><input type="file" data-sound-file accept="audio/*" hidden><span class="setting-hint" data-sound-name>Nenhum arquivo personalizado carregado. Máximo: 650 KB.</span></div>
           <label>Volume <output data-sound-volume-value>35%</output></label><input type="range" data-sound-volume min="0" max="100" step="1" value="35"><button type="button" data-sound-test>Testar som</button>
+
         </fieldset>
         <fieldset class="sound-category-setting" data-sound-category="announcements">
           <legend>Anúncios</legend>
