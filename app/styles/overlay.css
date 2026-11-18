@@ -361,6 +361,7 @@ button:disabled { opacity: .55; cursor: default; }
 
 /* GIF nativo, sem recorte e com texto fluindo ao lado. */
 #bubble { display: flow-root; }
+#bubble > .mastery-text { white-space: pre-line; }
 .event-image { float: left; width: clamp(72px, 8vw, 128px); height: clamp(72px, 8vw, 128px); object-fit: contain; margin: 0 16px 8px 0; }
 
 
