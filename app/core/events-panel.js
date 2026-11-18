@@ -329,8 +329,9 @@
         const layout = app.merlinSettings?.imageLayout?.() || {};
         const preview = document.createElement('div');
         app.merlinSettings?.applyBubbleColor?.(preview, layout.bubbleColor);
-        preview.className = `event-announcement-preview image-${this.imagePosition} image-size-${layout.size || 'medium'} message-width-${layout.bubbleWidth || 'auto'} mastery-text-${layout.fontSize || 'medium'} message-font-${layout.fontFamily || 'arial'}`;
-        preview.style.setProperty('--message-width', `${layout.bubbleWidth === 'auto' ? 0 : layout.bubbleWidth || 0}px`);
+        const bubbleWidth = layout.bubbleWidth === 'auto' ? 'max' : layout.bubbleWidth || 'max';
+        preview.className = `event-announcement-preview image-${this.imagePosition} image-size-${layout.size || 'medium'} message-width-${bubbleWidth} mastery-text-${layout.fontSize || 'medium'} message-font-${layout.fontFamily || 'arial'}`;
+        preview.style.setProperty('--message-width', `${bubbleWidth === 'max' ? 0 : bubbleWidth}px`);
         if (event.imageUrl || event.imageUrls?.length) {
           const image = document.createElement('img'); image.className = 'event-announcement-image';
           const sources = event.imageUrls?.length ? event.imageUrls : [event.imageUrl];
@@ -377,8 +378,9 @@
         label.append(input, title); card.append(label);
         const preview = document.createElement('div');
         app.merlinSettings?.applyBubbleColor?.(preview, layout.bubbleColor);
-        preview.className = `event-announcement-preview image-${this.localImagePosition} image-size-${layout.size || 'medium'} message-width-${layout.bubbleWidth || 'auto'} mastery-text-${layout.fontSize || 'medium'} message-font-${layout.fontFamily || 'arial'}`;
-        preview.style.setProperty('--message-width', `${layout.bubbleWidth === 'auto' ? 0 : layout.bubbleWidth || 0}px`);
+        const bubbleWidth = layout.bubbleWidth === 'auto' ? 'max' : layout.bubbleWidth || 'max';
+        preview.className = `event-announcement-preview image-${this.localImagePosition} image-size-${layout.size || 'medium'} message-width-${bubbleWidth} mastery-text-${layout.fontSize || 'medium'} message-font-${layout.fontFamily || 'arial'}`;
+        preview.style.setProperty('--message-width', `${bubbleWidth === 'max' ? 0 : bubbleWidth}px`);
         if (event.imageUrl) {
           const image = document.createElement('img'); image.className = 'event-announcement-image';
           image.src = event.imageUrl; image.alt = ''; image.referrerPolicy = 'no-referrer';

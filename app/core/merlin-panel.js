@@ -480,8 +480,9 @@
       const layout = settings.imageLayout();
       const bubble = document.createElement('div');
       settings.applyBubbleColor(bubble, layout.bubbleColor);
-      bubble.className = `merlin-queue-preview mastery image-size-${layout.size} message-width-${layout.bubbleWidth} mastery-text-${layout.fontSize} message-font-${layout.fontFamily} member-image-shape-${layout.memberShape}`;
-      bubble.style.setProperty('--message-width', `${layout.bubbleWidth === 'auto' ? 0 : layout.bubbleWidth}px`);
+      const bubbleWidth = layout.bubbleWidth === 'auto' ? 'max' : layout.bubbleWidth;
+      bubble.className = `merlin-queue-preview mastery image-size-${layout.size} message-width-${bubbleWidth} mastery-text-${layout.fontSize} message-font-${layout.fontFamily} member-image-shape-${layout.memberShape}`;
+      bubble.style.setProperty('--message-width', `${bubbleWidth === 'max' ? 0 : bubbleWidth}px`);
       for (const spec of settings.imageOptions(record)) {
         const image = document.createElement('img');
         image.className = `event-image ${spec.type}-image image-${spec.position}`;

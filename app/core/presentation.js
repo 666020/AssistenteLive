@@ -31,12 +31,13 @@
           const size = ['small', 'medium', 'large', 'auto'].includes(displayOptions.size) ? displayOptions.size : 'medium';
           const fontSize = ['small', 'medium', 'large', 'xlarge'].includes(displayOptions.fontSize) ? displayOptions.fontSize : 'medium';
           const fontFamily = ['arial', 'verdana', 'trebuchet', 'georgia', 'courier'].includes(displayOptions.fontFamily) ? displayOptions.fontFamily : 'arial';
-          const width = ['auto', '480', '640', '800', '1000'].includes(String(displayOptions.bubbleWidth)) ? String(displayOptions.bubbleWidth) : 'auto';
+          const savedWidth = String(displayOptions.bubbleWidth);
+          const width = savedWidth === 'auto' ? 'max' : ['320', '400', '480', '640', '800', '1000', '1200', 'max'].includes(savedWidth) ? savedWidth : '1000';
           this.bubble.classList.remove('image-size-small', 'image-size-medium', 'image-size-large', 'image-size-auto');
           this.bubble.classList.add(`image-size-${size}`);
-          this.bubble.classList.remove('message-width-auto', 'message-width-480', 'message-width-640', 'message-width-800', 'message-width-1000');
+          this.bubble.classList.remove('message-width-auto', 'message-width-320', 'message-width-400', 'message-width-480', 'message-width-640', 'message-width-800', 'message-width-1000', 'message-width-1200', 'message-width-max');
           this.bubble.classList.add(`message-width-${width}`);
-          this.bubble.style.setProperty('--message-width', `${width === 'auto' ? 0 : width}px`);
+          this.bubble.style.setProperty('--message-width', `${width === 'max' ? 0 : width}px`);
           this.bubble.classList.remove('member-image-shape-square', 'member-image-shape-circle');
           this.bubble.classList.add(`member-image-shape-${displayOptions.memberShape === 'square' ? 'square' : 'circle'}`);
           this.bubble.classList.remove('mastery-text-small', 'mastery-text-medium', 'mastery-text-large', 'mastery-text-xlarge');
@@ -114,7 +115,7 @@
         this.player.clear();
         this.bubble.textContent = '';
         this.bubble.style.removeProperty('--message-width');
-        this.bubble.classList.remove('image-size-small', 'image-size-medium', 'image-size-large', 'image-size-auto', 'member-image-shape-square', 'member-image-shape-circle', 'message-width-auto', 'message-width-480', 'message-width-640', 'message-width-800', 'message-width-1000');
+        this.bubble.classList.remove('image-size-small', 'image-size-medium', 'image-size-large', 'image-size-auto', 'member-image-shape-square', 'member-image-shape-circle', 'message-width-auto', 'message-width-320', 'message-width-400', 'message-width-480', 'message-width-640', 'message-width-800', 'message-width-1000', 'message-width-1200', 'message-width-max');
         this.bubble.classList.remove('mastery-text-small', 'mastery-text-medium', 'mastery-text-large', 'mastery-text-xlarge');
         this.bubble.classList.remove('message-font-arial', 'message-font-verdana', 'message-font-trebuchet', 'message-font-georgia', 'message-font-courier');
         this.running = false;

@@ -1,3 +1,6 @@
+AssistenteLive overlay 0.24.44 — largura adaptável do balão
+Atualize os arquivos da fonte OBS pelo ZIP AssistenteLive-OBS-0.24.44.zip. As larguras escolhidas agora são limites máximos: mensagens curtas encolhem automaticamente, e “Máximo disponível” usa toda a largura livre. Preferências antigas “Automática” são migradas para “Máximo disponível”.
+
 AssistenteLive overlay 0.24.43 — restauração sem diálogo bloqueado
 Cloudflare Worker atualizado para 0.18.16: estado movido do KV para a aba oculta `_Estado Assistente` na planilha, com migração única do KV antigo.
 Atualize somente os arquivos da fonte OBS pelo ZIP AssistenteLive-Marco-001-Anuncios-hall-0.24.43.zip. O Worker não precisa ser alterado. A confirmação da restauração agora aparece dentro do painel.

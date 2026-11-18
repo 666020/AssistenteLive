@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AssistenteLive — 0.24.43 · Restauração de configurações</title>
+  <title>AssistenteLive — 0.24.44 · Largura adaptável do balão</title>
   <link rel="stylesheet" href="styles/overlay.css">
   <script defer src="agents/merlin/merlin-data.js"></script>
   <script defer src="agents/clippy/clippy-data.js"></script>
@@ -42,7 +42,7 @@
   </main>
   <section id="settings" aria-labelledby="panel-title" hidden>
     <header class="panel-header">
-      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.43</span><p id="selected-agent-name">Carregando…</p></div>
+      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.44</span><p id="selected-agent-name">Carregando…</p></div>
       <button id="close-panel" type="button" aria-label="Fechar painel">Fechar · F1</button>
     </header>
     <nav class="panel-tabs" role="tablist" aria-label="Seções do painel">
@@ -291,12 +291,16 @@
         </fieldset>
         <fieldset class="merlin-setting merlin-options">
           <legend>Largura do balão</legend>
+          <p class="setting-hint">O balão se ajusta automaticamente ao conteúdo. O tamanho escolhido é o limite máximo; “Máximo disponível” usa toda a largura livre da tela.</p>
           <div class="merlin-option-list">
-            <label class="merlin-option"><input type="radio" name="merlin-bubble-width" value="auto"><span>Automática</span></label>
+            <label class="merlin-option"><input type="radio" name="merlin-bubble-width" value="320"><span>320 px</span></label>
+            <label class="merlin-option"><input type="radio" name="merlin-bubble-width" value="400"><span>400 px</span></label>
             <label class="merlin-option"><input type="radio" name="merlin-bubble-width" value="480"><span>480 px</span></label>
             <label class="merlin-option"><input type="radio" name="merlin-bubble-width" value="640"><span>640 px</span></label>
             <label class="merlin-option"><input type="radio" name="merlin-bubble-width" value="800"><span>800 px</span></label>
             <label class="merlin-option"><input type="radio" name="merlin-bubble-width" value="1000"><span>1000 px</span></label>
+            <label class="merlin-option"><input type="radio" name="merlin-bubble-width" value="1200"><span>1200 px</span></label>
+            <label class="merlin-option"><input type="radio" name="merlin-bubble-width" value="max"><span>Máximo disponível</span></label>
           </div>
         </fieldset>
         <fieldset class="merlin-setting merlin-options">
@@ -318,7 +322,7 @@
       <div class="merlin-preview" id="merlin-preview" role="button" tabindex="0" aria-label="Trocar exemplo aleatório da prévia" title="Clique para trocar o exemplo">
         <strong>Prévia · clique para trocar o exemplo</strong>
         <div class="merlin-preview-content">
-          <div id="merlin-preview-bubble" class="merlin-preview-bubble message-width-auto">
+          <div id="merlin-preview-bubble" class="merlin-preview-bubble message-width-max">
             <p id="merlin-template-preview" aria-live="polite">Blumzeira platinou Penguin Land (Master System) em 810 horas e 53 minutos — Penguin Land (Master System)</p>
           </div>
         </div>

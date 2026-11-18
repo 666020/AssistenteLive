@@ -36,7 +36,7 @@
   const HISTORY_POLICIES = new Set(['new-only', 'unannounced']);
   const IMAGE_POSITIONS = new Set(['left', 'right']);
   const IMAGE_SIZES = new Set(['small', 'medium', 'large', 'auto']);
-  const BUBBLE_WIDTHS = new Set(['auto', '480', '640', '800', '1000']);
+  const BUBBLE_WIDTHS = new Set(['320', '400', '480', '640', '800', '1000', '1200', 'max']);
   const MEMBER_IMAGE_SHAPES = new Set(['square', 'circle']);
   const FONT_SIZES = new Set(['small', 'medium', 'large', 'xlarge']);
   const FONT_FAMILIES = new Set(['arial', 'verdana', 'trebuchet', 'georgia', 'courier']);
@@ -282,7 +282,7 @@
           gamePosition: IMAGE_POSITIONS.has(saved.gamePosition) ? saved.gamePosition : IMAGE_POSITIONS.has(saved.imagePosition) ? saved.imagePosition : DEFAULTS.gamePosition,
           imageSize: IMAGE_SIZES.has(saved.imageSize) ? saved.imageSize : DEFAULTS.imageSize,
           memberImageShape: MEMBER_IMAGE_SHAPES.has(saved.memberImageShape) ? saved.memberImageShape : DEFAULTS.memberImageShape,
-          bubbleWidth: BUBBLE_WIDTHS.has(String(saved.bubbleWidth)) ? String(saved.bubbleWidth) : DEFAULTS.bubbleWidth,
+          bubbleWidth: String(saved.bubbleWidth) === 'auto' ? 'max' : BUBBLE_WIDTHS.has(String(saved.bubbleWidth)) ? String(saved.bubbleWidth) : DEFAULTS.bubbleWidth,
           fontSize: FONT_SIZES.has(saved.fontSize) ? saved.fontSize : DEFAULTS.fontSize,
           fontFamily: FONT_FAMILIES.has(saved.fontFamily) ? saved.fontFamily : DEFAULTS.fontFamily,
           bubbleColor: this.normalizeBubbleColor(saved.bubbleColor) || DEFAULTS.bubbleColor,
@@ -533,9 +533,9 @@
         : 'Aguardando masterizações da planilha…';
       this.previewBubble.classList.remove('image-size-small', 'image-size-medium', 'image-size-large', 'image-size-auto');
       this.previewBubble.classList.add(`image-size-${this.value.imageSize}`);
-      this.previewBubble.classList.remove('message-width-auto', 'message-width-480', 'message-width-640', 'message-width-800', 'message-width-1000');
+      this.previewBubble.classList.remove('message-width-auto', 'message-width-320', 'message-width-400', 'message-width-480', 'message-width-640', 'message-width-800', 'message-width-1000', 'message-width-1200', 'message-width-max');
       this.previewBubble.classList.add(`message-width-${this.value.bubbleWidth}`);
-      this.previewBubble.style.setProperty('--message-width', `${this.value.bubbleWidth === 'auto' ? 0 : this.value.bubbleWidth}px`);
+      this.previewBubble.style.setProperty('--message-width', `${this.value.bubbleWidth === 'max' ? 0 : this.value.bubbleWidth}px`);
       this.previewBubble.classList.remove('mastery-text-small', 'mastery-text-medium', 'mastery-text-large', 'mastery-text-xlarge');
       this.previewBubble.classList.add(`mastery-text-${this.value.fontSize}`);
       this.previewBubble.classList.remove('message-font-arial', 'message-font-verdana', 'message-font-trebuchet', 'message-font-georgia', 'message-font-courier');
