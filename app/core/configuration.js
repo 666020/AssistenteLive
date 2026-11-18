@@ -138,7 +138,7 @@
         const documentData = { format: FORMAT, version: VERSION, exportedAt: new Date().toISOString(), settings };
         const json = JSON.stringify(documentData, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
-        const filename = `AssistenteLive-configuracoes-${new Date().toISOString().slice(0, 10)}.json`;
+        const filename = `AssistenteHall-configuracoes-${new Date().toISOString().slice(0, 10)}.json`;
         if (typeof window.showSaveFilePicker !== 'function') {
           this.showExportData(json);
           return;
@@ -183,8 +183,8 @@
       let copied = false;
       try { copied = document.execCommand('copy'); } catch { /* A seleção continua disponível para Ctrl+C. */ }
       this.status.textContent = copied
-        ? 'JSON copiado. Cole no Bloco de Notas e salve como AssistenteLive-configuracoes.json.'
-        : 'O JSON está selecionado. Pressione Ctrl+C, cole no Bloco de Notas e salve como AssistenteLive-configuracoes.json.';
+        ? 'JSON copiado. Cole no Bloco de Notas e salve como AssistenteHall-configuracoes.json.'
+        : 'O JSON está selecionado. Pressione Ctrl+C, cole no Bloco de Notas e salve como AssistenteHall-configuracoes.json.';
     }
 
     async importSelectedFile() {
@@ -215,7 +215,7 @@
 
     applyImportedSettings(parsed) {
       if (!isObject(parsed) || parsed.format !== FORMAT || parsed.version !== VERSION || !isObject(parsed.settings)) {
-        throw new Error('Esse conteúdo não é uma exportação de configurações compatível do AssistenteLive.');
+        throw new Error('Esse conteúdo não é uma exportação de configurações compatível do AssistenteHall.');
       }
       for (const key of KEYS) {
         const value = Object.prototype.hasOwnProperty.call(parsed.settings, key) ? parsed.settings[key] : null;
@@ -225,7 +225,7 @@
         if (KEYS.includes(key) && value !== null) localStorage.setItem(key, value);
         else if (KEYS.includes(key)) localStorage.removeItem(key);
       }
-      this.status.textContent = 'Configurações importadas. Recarregando o AssistenteLive…';
+      this.status.textContent = 'Configurações importadas. Recarregando o AssistenteHall…';
       setTimeout(() => window.location.reload(), 350);
     }
 
