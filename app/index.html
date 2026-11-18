@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AssistenteLive — 0.24.52 · Anúncios separados</title>
-  <link rel="stylesheet" href="styles/overlay.css?v=0.24.55">
+  <title>AssistenteLive — 0.24.53 · Boas-vindas do Agent</title>
+  <link rel="stylesheet" href="styles/overlay.css?v=0.24.56">
   <script defer src="agents/merlin/merlin-data.js"></script>
   <script defer src="agents/clippy/clippy-data.js"></script>
   <script defer src="agents/bonzi/bonzi-data.js"></script>
@@ -31,10 +31,10 @@
   <script defer src="core/tabs.js"></script>
   <script defer src="core/merlin-settings.js"></script>
   <script defer src="core/merlin-panel.js"></script>
-  <script defer src="core/configuration.js"></script>
+  <script defer src="core/configuration.js?v=0.24.53"></script>
   <script defer src="core/agent-animations.js"></script>
   <script defer src="core/selector.js"></script>
-  <script defer src="core/main.js"></script>
+  <script defer src="core/main.js?v=0.24.53"></script>
 </head>
 <body>
   <div id="startup-loading" class="startup-loading" role="status" aria-live="polite" aria-label="Carregando AssistenteLive">
@@ -50,7 +50,7 @@
   </main>
   <section id="settings" aria-labelledby="panel-title" hidden>
     <header class="panel-header">
-      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.52</span><p id="selected-agent-name">Carregando…</p></div>
+      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.53</span><p id="selected-agent-name">Carregando…</p></div>
       <button id="close-panel" type="button" aria-label="Fechar painel">Fechar · F1</button>
     </header>
     <nav class="panel-tabs" role="tablist" aria-label="Seções do painel">
@@ -361,6 +361,13 @@
     <section id="pane-configuracoes" class="tab-pane" role="tabpanel" aria-labelledby="tab-configuracoes" hidden>
       <h2>Configurações do AssistenteLive</h2>
       <p class="tab-description">Exporte suas preferências para usar em outro OBS ou importe um arquivo salvo. Restaurar os padrões reinicia apenas as configurações; o cache e o histórico de masterizações ficam preservados.</p>
+      <fieldset class="welcome-settings">
+        <legend>Mensagem de boas-vindas</legend>
+        <label class="merlin-option"><input id="welcome-enabled" type="checkbox" checked><span>Mostrar quando o AssistenteLive iniciar</span></label>
+        <label for="welcome-message">Mensagem do Agent</label>
+        <textarea id="welcome-message" rows="3" maxlength="350" placeholder="Olá! Bem-vindo(a) à live. Pressione F1 para abrir o menu."></textarea>
+        <p class="setting-hint">O Agent selecionado fala essa mensagem uma vez ao iniciar. Use F1 para abrir o menu e alterar esta configuração.</p>
+      </fieldset>
       <div class="configuration-actions">
         <button id="export-settings" type="button">Exportar configurações</button>
         <button id="copy-settings" type="button" hidden>Copiar JSON</button>
