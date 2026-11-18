@@ -159,7 +159,7 @@
               this.status.textContent = 'Exportação cancelada.';
               return;
             }
-            if (error.name !== 'NotSupportedError' && error.name !== 'SecurityError') throw error;
+            if (error.name !== 'NotSupportedError' && error.name !== 'SecurityError' && error.name !== 'NotAllowedError') throw error;
             this.showExportData(json);
             return;
           }
