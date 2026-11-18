@@ -38,6 +38,8 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background:
 #bubble.message-font-courier, #merlin-preview-bubble.message-font-courier { font-family: 'Courier New', monospace; }
 #bubble.message-width-auto, #bubble.message-width-max { width: max-content; max-width: calc(100vw - 48px); }
 #bubble.message-width-320, #bubble.message-width-400, #bubble.message-width-480, #bubble.message-width-640, #bubble.message-width-800, #bubble.message-width-1000, #bubble.message-width-1200 { width: max-content; max-width: min(var(--message-width), calc(100vw - 48px)); }
+#stage[data-bubble-side="right"] #bubble.message-width-320, #stage[data-bubble-side="right"] #bubble.message-width-400, #stage[data-bubble-side="right"] #bubble.message-width-480, #stage[data-bubble-side="right"] #bubble.message-width-640, #stage[data-bubble-side="right"] #bubble.message-width-800, #stage[data-bubble-side="right"] #bubble.message-width-1000, #stage[data-bubble-side="right"] #bubble.message-width-1200,
+#stage[data-bubble-side="left"] #bubble.message-width-320, #stage[data-bubble-side="left"] #bubble.message-width-400, #stage[data-bubble-side="left"] #bubble.message-width-480, #stage[data-bubble-side="left"] #bubble.message-width-640, #stage[data-bubble-side="left"] #bubble.message-width-800, #stage[data-bubble-side="left"] #bubble.message-width-1000, #stage[data-bubble-side="left"] #bubble.message-width-1200 { max-width: min(var(--message-width), calc(100vw - var(--agent-width, 192px) - 64px)); }
 
 
 /* Painéis de interação usam toda a área da fonte; o overlay mantém sua escala. */
