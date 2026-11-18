@@ -121,7 +121,7 @@
       if (epoch !== this.localEpoch || this.paused || !this.localMinutes) return;
       this.localTimer = null;
       if (this.panel.selector.busy || this.panel.syncing || this.panel.loading || this.panel.running) { this.scheduleLocal(3000); return; }
-      const selected = this.panel.selectedEvents().filter(event => event.source === 'local');
+      const selected = this.panel.selectedLocalEvents();
       if (!selected.length || !this.panel.selector.presenterIds.length) {
         this.localAutoStatus.textContent = selected.length ? 'Selecione pelo menos um Agent para apresentar os anúncios locais.' : 'Nenhum anúncio local está selecionado para a sequência automática.';
         this.scheduleLocal(); return;
