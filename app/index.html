@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AssistenteLive — 0.24.48 · Carregamento progressivo</title>
+  <title>AssistenteLive — 0.24.49 · Barra de carregamento</title>
   <link rel="stylesheet" href="styles/overlay.css">
   <script defer src="agents/merlin/merlin-data.js"></script>
   <script defer src="agents/clippy/clippy-data.js"></script>
@@ -37,13 +37,20 @@
   <script defer src="core/main.js"></script>
 </head>
 <body>
+  <div id="startup-loading" class="startup-loading" role="status" aria-live="polite" aria-label="Carregando AssistenteLive">
+    <div class="startup-loading-card">
+      <p id="startup-loading-title">Carregando AssistenteLive…</p>
+      <progress id="startup-loading-progress" max="10" aria-label="Progresso do carregamento"></progress>
+      <p id="startup-loading-detail">Aguardando os arquivos do AssistenteLive…</p>
+    </div>
+  </div>
   <main id="stage" hidden>
     <canvas id="agent" width="128" height="128" aria-label="Merlin"></canvas>
     <div id="bubble" role="status" hidden></div>
   </main>
   <section id="settings" aria-labelledby="panel-title" hidden>
     <header class="panel-header">
-      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.48</span><p id="selected-agent-name">Carregando…</p></div>
+      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.49</span><p id="selected-agent-name">Carregando…</p></div>
       <button id="close-panel" type="button" aria-label="Fechar painel">Fechar · F1</button>
     </header>
     <nav class="panel-tabs" role="tablist" aria-label="Seções do painel">

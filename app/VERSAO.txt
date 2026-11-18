@@ -1,3 +1,6 @@
+AssistenteLive overlay 0.24.49 — barra de progresso no carregamento
+A tela mostra o progresso enquanto os Agents são baixados e some quando todos terminam. O painel pode ser aberto durante o carregamento.
+
 AssistenteLive overlay 0.24.48 — carregamento progressivo dos Agents
 O painel abre assim que o Agent escolhido fica pronto; os demais Agents e suas prévias carregam em segundo plano.
 
@@ -5,13 +8,13 @@ AssistenteLive overlay 0.24.47 — prévia ao vivo de anúncios locais e correç
 Atualize pelo ZIP AssistenteLive-OBS-0.24.47.zip. O editor local mostra o balão junto do formulário; a formatação permanece alinhada na prévia.
 
 AssistenteLive overlay 0.24.46 — anúncios sem título e formatação de mensagens
-Atualize pelo ZIP AssistenteLive-OBS-0.24.46.zip. Anúncios mostram somente a mensagem; mensagens e modelos aceitam {b}, {i}, {u} e {s}.
+Atualize os arquivos da fonte OBS pelo ZIP AssistenteLive-OBS-0.24.46.zip. Anúncios mostram somente a mensagem; mensagens e modelos aceitam {b}, {i}, {u} e {s}.
 
-AssistenteLive overlay 0.24.45 — imagem automática pela altura do texto
-Atualize pelo ZIP AssistenteLive-OBS-0.24.45.zip. O tamanho automático da imagem é calculado pela altura total do texto; a largura não limita mais a imagem.
+AssistenteLive overlay 0.24.45 — tamanho automático da imagem baseado na altura do texto
+Atualize os arquivos da fonte OBS pelo ZIP AssistenteLive-OBS-0.24.45.zip. A imagem automática agora usa a altura total do texto como medida; a largura disponível não reduz mais o tamanho calculado.
 
-AssistenteLive overlay 0.24.44 — largura adaptável do balão
-Atualize os arquivos da fonte OBS pelo ZIP AssistenteLive-OBS-0.24.44.zip. As larguras escolhidas agora são limites máximos: mensagens curtas encolhem automaticamente, e “Máximo disponível” usa toda a largura livre. Preferências antigas “Automática” são migradas para “Máximo disponível”.
+AssistenteLive overlay 0.24.44 — balão encolhe ao conteúdo e novos limites de largura
+Atualize os arquivos da fonte OBS pelo ZIP AssistenteLive-OBS-0.24.44.zip. Larguras escolhidas agora funcionam como limites máximos, com ajuste automático para mensagens curtas e opção de largura máxima disponível. Preferência antiga “Automática” é migrada para “Máximo disponível”.
 
 AssistenteLive overlay 0.24.43 — restauração sem diálogo bloqueado
 Cloudflare Worker atualizado para 0.18.16: estado movido do KV para a aba oculta `_Estado Assistente` na planilha, com migração única do KV antigo.
@@ -44,4 +47,7 @@ As abas Masterizações e catálogo do Hall (incluindo MEMBROS) precisam permiti
 
 
 
+
+AssistenteLive overlay 0.24.46 — anúncios sem título e formatação de mensagens
+Atualize os arquivos da fonte OBS pelo ZIP AssistenteLive-OBS-0.24.46.zip. Anúncios mostram somente a mensagem; mensagens e modelos aceitam {b}, {i}, {u} e {s}.
 

@@ -6,7 +6,29 @@
     const catalog = app.catalog;
     const loaded = new Map();
     app.loadErrors = [];
+    const loadingScreen = document.getElementById('startup-loading');
+    const loadingProgress = document.getElementById('startup-loading-progress');
+    const loadingTitle = document.getElementById('startup-loading-title');
+    const loadingDetail = document.getElementById('startup-loading-detail');
+    const completedLoads = new Set();
+    loadingProgress.max = catalog.length;
+    loadingProgress.value = 0;
+    loadingDetail.textContent = `Preparando Agents (0 de ${catalog.length})`;
+    const markLoadComplete = entry => {
+      completedLoads.add(entry.id);
+      loadingProgress.value = completedLoads.size;
+      loadingDetail.textContent = `Carregando Agents (${completedLoads.size} de ${catalog.length})`;
+      if (completedLoads.size >= catalog.length) {
+        loadingTitle.textContent = 'Carregamento concluído';
+        setTimeout(() => { loadingScreen.hidden = true; }, 450);
+      }
+    };
+    app.hideStartupLoading = () => { loadingScreen.hidden = true; };
+    app.showStartupLoadingIfPending = () => {
+      if (completedLoads.size < catalog.length) loadingScreen.hidden = false;
+    };
     const loadEntry = async entry => {
+      loadingTitle.textContent = 'Carregando AssistenteLive…';
       try {
         const definition = app[entry.id];
         const agent = await app.loadAgent(definition, entry.image);
@@ -19,6 +41,8 @@
         app.loadErrors.push({ id: entry.id, message: error.message });
         console.error('AssistenteLive: falha ao carregar ' + entry.name, error);
         return null;
+      } finally {
+        markLoadComplete(entry);
       }
     };
     let preferredId = null;
@@ -94,6 +118,7 @@
     app.state = 'error';
     app.error = error.message;
     document.getElementById('stage').hidden = true;
+    document.getElementById('startup-loading').hidden = true;
     document.getElementById('panel-status').textContent = 'Falha ao iniciar. Confira os arquivos da pasta e atualize a fonte.';
     document.getElementById('settings').hidden = false;
     console.error('AssistenteLive: falha ao iniciar.', error);

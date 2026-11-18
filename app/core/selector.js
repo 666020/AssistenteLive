@@ -261,6 +261,7 @@
       if (presenter) presenter.name.textContent = this.agentName(id);
     }
     open() {
+      app.hideStartupLoading?.();
       this.events?.auto?.pause();
       app.cancelWork();
       // Exponha o estado aberto antes de liberar filas; setBusy(false) pode tentar processar masterizações pendentes.
@@ -279,6 +280,7 @@
     close({ suppressPending = false } = {}) {
       if (this.events?.auto && this.events.auto.input.value !== String(this.events.auto.minutes)) this.events.auto.change();
       this.panel.hidden = true; this.events?.auto?.resume();
+      app.showStartupLoadingIfPending?.();
       if (!suppressPending) this.merlinPanel?.processPending();
     }
     setBusy(value) {
