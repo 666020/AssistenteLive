@@ -78,7 +78,6 @@
     }
     if (key === 'AssistenteLive.localAnnouncements.v1') return Array.isArray(value) && value.length <= 50
       && value.every(item => isObject(item) && typeof item.id === 'string' && item.id.length <= 100
-        && typeof item.title === 'string' && item.title.trim().length > 0 && item.title.length <= 100
         && typeof item.message === 'string' && item.message.trim().length > 0 && item.message.length <= 350
         && typeof item.imageUrl === 'string' && item.imageUrl.length <= 2048
         && (!item.imageUrl || /^https?:\/\//i.test(item.imageUrl)));
@@ -92,7 +91,6 @@
     constructor(selector) {
       this.selector = selector;
       this.status = document.getElementById('configuration-status');
-      this.fileInput = document.getElementById('settings-file');
       this.exportData = document.getElementById('settings-export-data');
       this.exportLabel = document.getElementById('settings-export-label');
       this.importData = document.getElementById('settings-import-data');
@@ -111,7 +109,6 @@
       this.welcomeMessage.addEventListener('change', () => this.saveWelcomeSettings());
       document.getElementById('export-settings').addEventListener('click', () => this.export());
       document.getElementById('copy-settings').addEventListener('click', () => this.copyExport());
-      document.getElementById('import-settings').addEventListener('click', () => this.fileInput.click());
       document.getElementById('import-pasted-settings').addEventListener('click', () => this.importPastedSettings());
       document.getElementById('restore-settings').addEventListener('click', () => this.restoreDefaults());
       this.confirmRestoreButton.addEventListener('click', () => this.confirmRestoreDefaults());
@@ -119,7 +116,6 @@
         this.restoreConfirmation.hidden = true;
         this.status.textContent = 'Restauração cancelada. Suas configurações foram mantidas.';
       });
-      this.fileInput.addEventListener('change', () => { void this.importSelectedFile(); });
     }
 
     saveWelcomeSettings() {
@@ -193,22 +189,6 @@
       this.status.textContent = copied
         ? 'JSON copiado. Cole no Bloco de Notas e salve como AssistenteHall-configuracoes.json.'
         : 'O JSON está selecionado. Pressione Ctrl+C, cole no Bloco de Notas e salve como AssistenteHall-configuracoes.json.';
-    }
-
-    async importSelectedFile() {
-      const file = this.fileInput.files?.[0];
-      this.fileInput.value = '';
-      if (!file) return;
-      if (file.size > 2 * 1024 * 1024) {
-        this.status.textContent = 'O arquivo é grande demais para importar (máximo de 4 MB).';
-        return;
-      }
-      try {
-        const parsed = JSON.parse(await file.text());
-        this.applyImportedSettings(parsed);
-      } catch (error) {
-        this.status.textContent = `Não foi possível importar o arquivo: ${error.message}`;
-      }
     }
 
     importPastedSettings() {
