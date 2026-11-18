@@ -113,7 +113,24 @@
       const agent = await loadEntry(entry);
       if (agent) selector.agentLoaded(entry, agent);
       else selector.agentLoadFailed(entry);
-    }));
+    })).then(async () => {
+      let enabled = true;
+      let welcome = 'Olá! Seja bem-vindo(a) à live. Pressione F1 para abrir o menu.';
+      try {
+        enabled = localStorage.getItem('AssistenteLive.welcomeEnabled.v1') !== 'false';
+        welcome = localStorage.getItem('AssistenteLive.welcomeMessage.v1') ?? welcome;
+      } catch {}
+      welcome = String(welcome).trim() || 'Olá! Seja bem-vindo(a) à live. Pressione F1 para abrir o menu.';
+      if (!enabled || !selector.panel.hidden) return;
+      try { await app.wait(500, app.workController.signal); } catch { return; }
+      if (!selector.panel.hidden || app.state !== 'ready') return;
+      const presenterId = loaded.has(selector.selected) ? selector.selected : catalog.find(entry => loaded.has(entry.id))?.id;
+      if (!presenterId) return;
+      const readingMs = Math.max(5000, Math.min(15000, Math.ceil(welcome.length / 18) * 1000));
+      await present(presenterId, 'welcome', null, app.workController.signal, [{
+        text: welcome, readingMs, mastery: false, soundCategory: 'announcements'
+      }]);
+    });
   })().catch(error => {
     app.state = 'error';
     app.error = error.message;
