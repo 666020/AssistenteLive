@@ -3,12 +3,15 @@
   const app = window.AssistenteLive;
   const FORMAT = 'AssistenteLive.settings';
   const VERSION = 1;
+  const WELCOME_DEFAULT = 'Olá! Seja bem-vindo(a) à live. Pressione F1 para abrir o menu.';
   const KEYS = [
     'AssistenteLive.activeTab',
     'AssistenteLive.agentOverrides.v1',
     'AssistenteLive.agentAnimationSequence.v1',
     'AssistenteLive.agentMessageAnimationMode.v1',
     'AssistenteLive.messageExample',
+    'AssistenteLive.welcomeEnabled.v1',
+    'AssistenteLive.welcomeMessage.v1',
     'AssistenteLive.selectedAgent',
     'AssistenteLive.presentationAgents.v1',
     'AssistenteLive.merlinSettings.v1',
@@ -34,6 +37,8 @@
     if (typeof raw !== 'string' || raw.length > (key === 'AssistenteLive.merlinSettings.v1' ? 3000000 : 1000000)) return false;
     if (key === 'AssistenteLive.activeTab') return TAB_NAMES.includes(raw);
     if (key === 'AssistenteLive.messageExample') return EXAMPLES.includes(raw);
+    if (key === 'AssistenteLive.welcomeEnabled.v1') return raw === 'true' || raw === 'false';
+    if (key === 'AssistenteLive.welcomeMessage.v1') return raw.length <= 350;
     if (key === 'AssistenteLive.selectedAgent') return selector.catalog.some(entry => entry.id === raw);
     if (key === 'AssistenteLive.presentationAgents.v1') {
       let ids;
@@ -93,6 +98,17 @@
       this.importData = document.getElementById('settings-import-data');
       this.restoreConfirmation = document.getElementById('restore-settings-confirmation');
       this.confirmRestoreButton = document.getElementById('confirm-restore-settings');
+      this.welcomeEnabled = document.getElementById('welcome-enabled');
+      this.welcomeMessage = document.getElementById('welcome-message');
+      try {
+        this.welcomeEnabled.checked = localStorage.getItem('AssistenteLive.welcomeEnabled.v1') !== 'false';
+        this.welcomeMessage.value = localStorage.getItem('AssistenteLive.welcomeMessage.v1') ?? WELCOME_DEFAULT;
+      } catch {
+        this.welcomeEnabled.checked = true;
+        this.welcomeMessage.value = WELCOME_DEFAULT;
+      }
+      this.welcomeEnabled.addEventListener('change', () => this.saveWelcomeSettings());
+      this.welcomeMessage.addEventListener('change', () => this.saveWelcomeSettings());
       document.getElementById('export-settings').addEventListener('click', () => this.export());
       document.getElementById('copy-settings').addEventListener('click', () => this.copyExport());
       document.getElementById('import-settings').addEventListener('click', () => this.fileInput.click());
@@ -104,6 +120,16 @@
         this.status.textContent = 'Restauração cancelada. Suas configurações foram mantidas.';
       });
       this.fileInput.addEventListener('change', () => { void this.importSelectedFile(); });
+    }
+
+    saveWelcomeSettings() {
+      try {
+        localStorage.setItem('AssistenteLive.welcomeEnabled.v1', String(this.welcomeEnabled.checked));
+        localStorage.setItem('AssistenteLive.welcomeMessage.v1', this.welcomeMessage.value.slice(0, 350));
+        this.status.textContent = 'Mensagem de boas-vindas salva neste OBS.';
+      } catch {
+        this.status.textContent = 'Não foi possível salvar a mensagem de boas-vindas neste OBS.';
+      }
     }
 
     async export() {
