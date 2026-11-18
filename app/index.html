@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AssistenteLive — 0.24.54 · Quebra de linha</title>
+  <title>AssistenteHall — 0.24.55</title>
   <link rel="stylesheet" href="styles/overlay.css?v=0.24.57">
   <script defer src="agents/merlin/merlin-data.js"></script>
   <script defer src="agents/clippy/clippy-data.js"></script>
@@ -31,17 +31,17 @@
   <script defer src="core/tabs.js"></script>
   <script defer src="core/merlin-settings.js"></script>
   <script defer src="core/merlin-panel.js"></script>
-  <script defer src="core/configuration.js?v=0.24.53"></script>
+  <script defer src="core/configuration.js?v=0.24.55"></script>
   <script defer src="core/agent-animations.js"></script>
   <script defer src="core/selector.js"></script>
-  <script defer src="core/main.js?v=0.24.53"></script>
+  <script defer src="core/main.js?v=0.24.55"></script>
 </head>
 <body>
-  <div id="startup-loading" class="startup-loading" role="status" aria-live="polite" aria-label="Carregando AssistenteLive">
+  <div id="startup-loading" class="startup-loading" role="status" aria-live="polite" aria-label="Carregando AssistenteHall">
     <div class="startup-loading-card">
-      <p id="startup-loading-title">Carregando AssistenteLive…</p>
+      <p id="startup-loading-title">Carregando AssistenteHall…</p>
       <progress id="startup-loading-progress" max="10" aria-label="Progresso do carregamento"></progress>
-      <p id="startup-loading-detail">Aguardando os arquivos do AssistenteLive…</p>
+      <p id="startup-loading-detail">Aguardando os arquivos do AssistenteHall…</p>
     </div>
   </div>
   <main id="stage" hidden>
@@ -50,7 +50,7 @@
   </main>
   <section id="settings" aria-labelledby="panel-title" hidden>
     <header class="panel-header">
-      <div class="panel-heading"><h1 id="panel-title">AssistenteLive</h1><span class="eyebrow">0.24.54</span><p id="selected-agent-name">Carregando…</p></div>
+      <div class="panel-heading"><h1 id="panel-title">AssistenteHall</h1><span class="eyebrow">0.24.55</span><p id="selected-agent-name">Carregando…</p></div>
       <button id="close-panel" type="button" aria-label="Fechar painel">Fechar · F1</button>
     </header>
     <nav class="panel-tabs" role="tablist" aria-label="Seções do painel">
@@ -359,11 +359,11 @@
       <div id="console-name-list" class="console-name-list"><p class="tab-description">Carregando consoles do Hall…</p></div>
     </section>
     <section id="pane-configuracoes" class="tab-pane" role="tabpanel" aria-labelledby="tab-configuracoes" hidden>
-      <h2>Configurações do AssistenteLive</h2>
+      <h2>Configurações do AssistenteHall</h2>
       <p class="tab-description">Exporte suas preferências para usar em outro OBS ou importe um arquivo salvo. Restaurar os padrões reinicia apenas as configurações; o cache e o histórico de masterizações ficam preservados.</p>
       <fieldset class="welcome-settings">
         <legend>Mensagem de boas-vindas</legend>
-        <label class="merlin-option"><input id="welcome-enabled" type="checkbox" checked><span>Mostrar quando o AssistenteLive iniciar</span></label>
+        <label class="merlin-option"><input id="welcome-enabled" type="checkbox" checked><span>Mostrar quando o AssistenteHall iniciar</span></label>
         <label for="welcome-message">Mensagem do Agent</label>
         <textarea id="welcome-message" rows="3" maxlength="350" placeholder="Olá! Bem-vindo(a) à live. Pressione F1 para abrir o menu."></textarea>
         <p class="setting-hint">O Agent selecionado fala essa mensagem uma vez ao iniciar. Use F1 para abrir o menu e alterar esta configuração.</p>
