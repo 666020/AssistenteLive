@@ -46,16 +46,9 @@
       if (!container.isConnected) return 'detached';
       const images = [...container.querySelectorAll(selector)];
       if (!images.length) return 'done';
-      const style = getComputedStyle(container);
-      const containerWidth = container.clientWidth;
       const textHeight = text.getBoundingClientRect().height;
-      if (containerWidth <= 0 || textHeight <= 0) return 'hidden';
-      const horizontalSpace = containerWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0) - (parseFloat(style.borderLeftWidth) || 0) - (parseFloat(style.borderRightWidth) || 0);
-      const gap = parseFloat(style.columnGap) || parseFloat(style.gap) || 0;
-      const fontSize = parseFloat(getComputedStyle(text).fontSize) || 16;
-      const minimumTextWidth = Math.max(120, fontSize * 7);
-      const widthLimit = Math.max(32, (horizontalSpace - gap * images.length - minimumTextWidth) / images.length);
-      const size = Math.ceil(Math.min(maxSize, widthLimit, Math.max(32, textHeight)));
+      if (textHeight <= 0) return 'hidden';
+      const size = Math.ceil(Math.min(maxSize, Math.max(32, textHeight)));
       for (const image of images) {
         image.style.width = `${size}px`; image.style.height = `${size}px`; image.style.flexBasis = `${size}px`;
         image.style.visibility = 'visible';
