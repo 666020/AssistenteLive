@@ -151,6 +151,8 @@ button:disabled { opacity: .55; cursor: default; }
 .local-announcement-editor-actions, .local-announcement-controls, .local-announcement-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .local-announcement-controls { margin: 12px 0; }
 .local-announcement-card-actions { padding: 0 12px 12px; }
+.local-announcement-delete-confirmation { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.local-announcement-delete-confirmation span { margin-right: 8px; }
 .event-announcement-group-title { grid-column: 1 / -1; margin: 12px 0 0; }
 .event-announcement-card { display: flex; flex-direction: column; align-items: stretch; gap: 10px; min-width: 0; padding: 14px; border: 1px solid #514a64; border-radius: 10px; background: #302c3e; }
 .event-announcement-choice { display: flex; align-items: flex-start; gap: 10px; min-width: 0; cursor: pointer; }
