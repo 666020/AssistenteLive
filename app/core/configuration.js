@@ -138,6 +138,12 @@
         const documentData = { format: FORMAT, version: VERSION, exportedAt: new Date().toISOString(), settings };
         const json = JSON.stringify(documentData, null, 2);
         const filename = `AssistenteHall-configuracoes-${new Date().toISOString().slice(0, 10)}.json`;
+        // OBS injects this object into its Browser Source. Its CEF save picker can
+        // create a file but silently leave it empty, so use the copy fallback there.
+        if (window.obsstudio) {
+          this.showExportData(json, 'No OBS, o seletor pode criar um arquivo vazio. Copie o JSON e salve pelo Bloco de Notas.');
+          return;
+        }
         if (typeof window.showSaveFilePicker !== 'function') {
           this.showExportData(json);
           return;
