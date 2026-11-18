@@ -1,3 +1,6 @@
+AssistenteLive overlay 0.24.48 — carregamento progressivo dos Agents
+O painel abre assim que o Agent escolhido fica pronto; os demais Agents e suas prévias carregam em segundo plano.
+
 AssistenteLive overlay 0.24.47 — prévia ao vivo de anúncios locais e correção do texto em negrito
 Atualize pelo ZIP AssistenteLive-OBS-0.24.47.zip. O editor local mostra o balão junto do formulário; a formatação permanece alinhada na prévia.
 

@@ -6,7 +6,7 @@
     const catalog = app.catalog;
     const loaded = new Map();
     app.loadErrors = [];
-    await Promise.all(catalog.map(async entry => {
+    const loadEntry = async entry => {
       try {
         const definition = app[entry.id];
         const agent = await app.loadAgent(definition, entry.image);
@@ -14,11 +14,25 @@
           if (!definition.animations[name]) throw new Error('Animação necessária ausente: ' + name);
         }
         loaded.set(entry.id, agent);
+        return agent;
       } catch (error) {
         app.loadErrors.push({ id: entry.id, message: error.message });
         console.error('AssistenteLive: falha ao carregar ' + entry.name, error);
+        return null;
       }
-    }));
+    };
+    let preferredId = null;
+    try { preferredId = localStorage.getItem('AssistenteLive.selectedAgent'); } catch {}
+    const firstEntry = catalog.find(entry => entry.id === preferredId) || catalog[0];
+    let firstLoaded = await loadEntry(firstEntry);
+    if (!firstLoaded) {
+      for (const entry of catalog) {
+        if (entry === firstEntry) continue;
+        firstLoaded = await loadEntry(entry);
+        if (firstLoaded) break;
+      }
+    }
+    if (!firstLoaded) throw new Error('Nenhum Agent conseguiu carregar. Confira sua conexão e tente atualizar a página.');
     const canvas = document.getElementById('agent');
     const stage = document.getElementById('stage');
     const bubble = document.getElementById('bubble');
@@ -71,6 +85,11 @@
     app.merlinPanel = new app.MerlinPanel(selector, present);
     app.state = 'ready';
     if (!selector.selected) { app.state = 'error'; selector.open(); }
+    void Promise.all(catalog.filter(entry => !loaded.has(entry.id)).map(async entry => {
+      const agent = await loadEntry(entry);
+      if (agent) selector.agentLoaded(entry, agent);
+      else selector.agentLoadFailed(entry);
+    }));
   })().catch(error => {
     app.state = 'error';
     app.error = error.message;
