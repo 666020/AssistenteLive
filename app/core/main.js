@@ -28,7 +28,7 @@
       if (completedLoads.size < catalog.length) loadingScreen.hidden = false;
     };
     const loadEntry = async entry => {
-      loadingTitle.textContent = 'Carregando AssistenteLive…';
+      loadingTitle.textContent = 'Carregando AssistenteHall…';
       try {
         const definition = app[entry.id];
         const agent = await app.loadAgent(definition, entry.image);
@@ -39,7 +39,7 @@
         return agent;
       } catch (error) {
         app.loadErrors.push({ id: entry.id, message: error.message });
-        console.error('AssistenteLive: falha ao carregar ' + entry.name, error);
+        console.error('AssistenteHall: falha ao carregar ' + entry.name, error);
         return null;
       } finally {
         markLoadComplete(entry);
@@ -94,7 +94,7 @@
         if (error.name === 'AbortError') return false;
         failed = true;
         app.state = 'error'; app.error = error.message;
-        console.error('AssistenteLive: falha na apresentação.', error);
+        console.error('AssistenteHall: falha na apresentação.', error);
       } finally {
         stage.hidden = true; bubble.hidden = true;
         busy = false; selector.setBusy(false);
@@ -138,6 +138,6 @@
     document.getElementById('startup-loading').hidden = true;
     document.getElementById('panel-status').textContent = 'Falha ao iniciar. Confira os arquivos da pasta e atualize a fonte.';
     document.getElementById('settings').hidden = false;
-    console.error('AssistenteLive: falha ao iniciar.', error);
+    console.error('AssistenteHall: falha ao iniciar.', error);
   });
 })();
