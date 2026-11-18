@@ -364,3 +364,10 @@ button:disabled { opacity: .55; cursor: default; }
 .event-image { float: left; width: clamp(72px, 8vw, 128px); height: clamp(72px, 8vw, 128px); object-fit: contain; margin: 0 16px 8px 0; }
 
 
+
+.welcome-settings { display: grid; justify-items: start; gap: 10px; max-width: 900px; margin: 8px 0 20px; padding: 14px; border: 1px solid #514a64; border-radius: 10px; background: #302c3e; }
+.welcome-settings legend { padding: 0 6px; font-weight: bold; }
+.welcome-settings > label[for="welcome-message"] { font-weight: bold; }
+.welcome-settings textarea { box-sizing: border-box; width: min(100%, 760px); min-height: 82px; padding: 10px; border: 1px solid #837695; border-radius: 8px; color: #fff; background: #201d2c; font: inherit; line-height: 1.4; resize: vertical; }
+.welcome-settings textarea:focus-visible { outline: 3px solid #f2d987; outline-offset: 2px; }
+.welcome-settings .tab-description, .welcome-settings .setting-hint { margin: 0; }
