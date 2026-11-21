@@ -77,17 +77,18 @@
         const gap = parseFloat(style.columnGap || style.gap || 0) || 0;
         const textFloor = Math.min(180, innerWidth * 0.35);
         const widthBudget = Math.max(32, innerWidth - textFloor - gap * images.length);
-        const imageWidthBudget = Math.max(16, widthBudget / images.length);
+        let usedWidth = 0;
         for (const image of images) {
           const ratio = image.naturalWidth > 0 && image.naturalHeight > 0
             ? image.naturalWidth / image.naturalHeight : 1;
           const naturalWidth = targetHeight * ratio;
-          const width = Math.max(1, Math.min(naturalWidth, maxSize * 2, imageWidthBudget));
+          const width = Math.max(1, Math.min(naturalWidth, maxSize * 2, Math.max(32, widthBudget - usedWidth)));
           const height = Math.max(1, width / ratio);
           image.style.width = `${width}px`;
           image.style.height = `${height}px`;
           image.style.flexBasis = `${width}px`;
           image.style.visibility = image.complete && image.naturalWidth > 0 ? 'visible' : 'hidden';
+          usedWidth += width;
         }
       }
       for (const image of images) image.style.visibility = image.complete && image.naturalWidth > 0 ? 'visible' : 'hidden';

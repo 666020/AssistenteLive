@@ -38,8 +38,8 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background:
 #bubble.message-font-courier, #merlin-preview-bubble.message-font-courier { font-family: 'Courier New', monospace; }
 #bubble.message-width-auto, #bubble.message-width-max { width: max-content; max-width: calc(100vw - 48px); }
 #bubble.message-width-320, #bubble.message-width-400, #bubble.message-width-480, #bubble.message-width-640, #bubble.message-width-800, #bubble.message-width-1000, #bubble.message-width-1200 { width: max-content; max-width: min(var(--message-width), calc(100vw - 48px)); }
-#stage[data-bubble-side="right"] #bubble.message-width-320, #stage[data-bubble-side="right"] #bubble.message-width-400, #stage[data-bubble-side="right"] #bubble.message-width-480, #stage[data-bubble-side="right"] #bubble.message-width-640, #stage[data-bubble-side="right"] #bubble.message-width-800, #stage[data-bubble-side="right"] #bubble.message-width-1000, #stage[data-bubble-side="right"] #bubble.message-width-1200,
-#stage[data-bubble-side="left"] #bubble.message-width-320, #stage[data-bubble-side="left"] #bubble.message-width-400, #stage[data-bubble-side="left"] #bubble.message-width-480, #stage[data-bubble-side="left"] #bubble.message-width-640, #stage[data-bubble-side="left"] #bubble.message-width-800, #stage[data-bubble-side="left"] #bubble.message-width-1000, #stage[data-bubble-side="left"] #bubble.message-width-1200 { max-width: min(var(--message-width), calc(100vw - var(--agent-width, 192px) - 64px)); }
+#stage[data-bubble-side="right"] #bubble.message-width-320, #stage[data-bubble-side="right"] #bubble.message-width-400, #stage[data-bubble-side="right"] #bubble.message-width-480, #stage[data-bubble-side="right"] #bubble.message-width-640, #stage[data-bubble-side="right"] #bubble.message-width-800, #stage[data-bubble-side="right"] #bubble.message-width-1000, #stage[data-bubble-side="right"] #bubble.message-width-1200, #stage[data-bubble-side="left"] #bubble.message-width-320, #stage[data-bubble-side="left"] #bubble.message-width-400, #stage[data-bubble-side="left"] #bubble.message-width-480, #stage[data-bubble-side="left"] #bubble.message-width-640, #stage[data-bubble-side="left"] #bubble.message-width-800, #stage[data-bubble-side="left"] #bubble.message-width-1000, #stage[data-bubble-side="left"] #bubble.message-width-1200 { max-width: min(var(--message-width), calc(100vw - var(--agent-width, 192px) - 64px)); }
+#stage[data-bubble-side="right"] #bubble.message-width-auto, #stage[data-bubble-side="right"] #bubble.message-width-max, #stage[data-bubble-side="left"] #bubble.message-width-auto, #stage[data-bubble-side="left"] #bubble.message-width-max { max-width: calc(100vw - var(--agent-width, 192px) - 64px); }
 
 
 /* Painéis de interação usam toda a área da fonte; o overlay mantém sua escala. */
@@ -169,6 +169,8 @@ button:disabled { opacity: .55; cursor: default; }
 #local-auto-interval { width: 120px; padding: 10px; font: inherit; color: #fff; background: #302c3e; border: 1px solid #837695; border-radius: 8px; }
 #local-auto-status { flex-basis: 100%; margin: 0; }
 .event-announcement-preview { display: flex; flex-wrap: nowrap; align-items: center; gap: 12px; box-sizing: border-box; width: max-content; max-width: 100%; min-width: 0; padding: 12px; border: 1px solid #837695; border-radius: 12px; background: var(--bubble-background, #fffdf5); color: var(--bubble-foreground, #25202d); font-size: var(--mastery-font-size, 20px); line-height: 1.35; }
+.event-announcement-preview[role="button"], .merlin-queue-preview[role="button"] { cursor: pointer; }
+.event-announcement-preview[role="button"]:focus-visible, .merlin-queue-preview[role="button"]:focus-visible { outline: 3px solid #ffe68a; outline-offset: 3px; }
 .event-announcement-preview.message-width-320, .event-announcement-preview.message-width-400, .event-announcement-preview.message-width-480, .event-announcement-preview.message-width-640, .event-announcement-preview.message-width-800, .event-announcement-preview.message-width-1000, .event-announcement-preview.message-width-1200 { width: max-content; max-width: min(var(--message-width), 100%); }
 .event-announcement-preview.message-width-max { width: max-content; max-width: 100%; }
 .event-announcement-preview.mastery-text-small { --mastery-font-size: 16px; }
@@ -224,6 +226,13 @@ button:disabled { opacity: .55; cursor: default; }
 .bubble-color-swatches button[data-bubble-color="#302c3e"] { --swatch-color: #302c3e; }
 .merlin-settings-grid > .merlin-template-setting { grid-column: 1 / span 2; grid-row: 1; max-width: none; }
 .merlin-settings-grid > .merlin-preview { grid-column: 3; grid-row: 1; max-width: none; min-width: 0; }
+.merlin-message-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.merlin-message-tabs button { min-height: 40px; padding: 7px 16px; font-size: .9em; }
+.merlin-message-tabs button[aria-selected="true"] { background: #dccbff; color: #241837; border-color: #dccbff; box-shadow: inset 0 0 0 2px #837695; font-weight: bold; }
+.merlin-message-panel { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.merlin-message-panel > label:not(.merlin-option) { font-weight: bold; }
+.merlin-message-panel textarea { box-sizing: border-box; width: min(100%, 900px); padding: 10px; border: 1px solid #837695; border-radius: 8px; color: #fff; background: #201d2c; font: inherit; line-height: 1.4; resize: vertical; }
+.merlin-message-panel:focus-visible { outline: 3px solid #f2d987; outline-offset: 3px; }
 #pane-merlin { font-size: clamp(14px, 1vw, 20px); }
 #pane-merlin h2 { margin-bottom: 8px; font-size: clamp(20px, 1.5vw, 28px); }
 #pane-merlin .tab-description { margin-bottom: 10px; }
@@ -243,6 +252,14 @@ button:disabled { opacity: .55; cursor: default; }
 .console-name-row span { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; font-weight: bold; }
 .console-name-row input { box-sizing: border-box; flex: 0 1 46%; width: 46%; min-width: 150px; max-width: 460px; padding: 8px 10px; border: 1px solid #837695; border-radius: 8px; background: #201d2c; color: #fff; font: inherit; }
 .configuration-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 8px 0 16px; }
+.welcome-settings { display: grid; justify-items: start; gap: 10px; max-width: 900px; margin: 8px 0 20px; padding: 14px; border: 1px solid #514a64; border-radius: 10px; background: #302c3e; }
+.welcome-settings legend { padding: 0 6px; font-weight: bold; }
+.welcome-settings > label[for="welcome-message"] { font-weight: bold; }
+.welcome-settings textarea { box-sizing: border-box; width: min(100%, 760px); min-height: 82px; padding: 10px; border: 1px solid #837695; border-radius: 8px; color: #fff; background: #201d2c; font: inherit; line-height: 1.4; resize: vertical; }
+.welcome-settings textarea:focus-visible { outline: 3px solid #f2d987; outline-offset: 2px; }
+.recruit-message-settings textarea { box-sizing: border-box; display: block; width: min(100%, 760px); min-height: 100px; padding: 10px; border: 1px solid #837695; border-radius: 8px; color: #fff; background: #201d2c; font: inherit; line-height: 1.4; resize: vertical; }
+.recruit-message-settings textarea:focus-visible { outline: 3px solid #f2d987; outline-offset: 2px; }
+.welcome-settings .tab-description, .welcome-settings .setting-hint { margin: 0; }
 .configuration-actions .restore-settings-button { margin-left: auto; border-color: #d07b84; background: #4b303a; }
 .restore-settings-confirmation { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; padding: 12px; border: 1px solid #d07b84; border-radius: 8px; background: #332631; }
 .restore-settings-confirmation p { flex: 1 1 100%; margin: 0 0 4px; }
@@ -367,10 +384,6 @@ button:disabled { opacity: .55; cursor: default; }
 .event-image { float: left; width: clamp(72px, 8vw, 128px); height: clamp(72px, 8vw, 128px); object-fit: contain; margin: 0 16px 8px 0; }
 
 
+.recruit-message-settings { margin-top: 0; padding: 10px; border: 1px solid #514a64; border-radius: 8px; background: #282434; }
+.recruit-message-settings > label[for] { display: block; margin-top: 0; }
 
-.welcome-settings { display: grid; justify-items: start; gap: 10px; max-width: 900px; margin: 8px 0 20px; padding: 14px; border: 1px solid #514a64; border-radius: 10px; background: #302c3e; }
-.welcome-settings legend { padding: 0 6px; font-weight: bold; }
-.welcome-settings > label[for="welcome-message"] { font-weight: bold; }
-.welcome-settings textarea { box-sizing: border-box; width: min(100%, 760px); min-height: 82px; padding: 10px; border: 1px solid #837695; border-radius: 8px; color: #fff; background: #201d2c; font: inherit; line-height: 1.4; resize: vertical; }
-.welcome-settings textarea:focus-visible { outline: 3px solid #f2d987; outline-offset: 2px; }
-.welcome-settings .tab-description, .welcome-settings .setting-hint { margin: 0; }

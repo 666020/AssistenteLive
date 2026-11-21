@@ -81,6 +81,7 @@
         this.radios.push(radio); grid.append(label);
         if (loaded.has(entry.id)) this.addPresenterOption(entry);
       }
+      this.sortAgentCards();
       this.agentNameInput.addEventListener('input', () => {
         if (!this.selected) return;
         this.agentOverrides[this.selected] = { ...(this.agentOverrides[this.selected] || {}), name: this.agentNameInput.value.slice(0, 40) };
@@ -172,8 +173,19 @@
         this.update();
       });
       presenterLabel.append(checkbox, presenterName);
-      document.getElementById('agent-presenter-grid').append(presenterLabel);
-      this.presenterChecks.push({ id: entry.id, checkbox, name: presenterName });
+      this.presenterChecks.push({ id: entry.id, checkbox, name: presenterName, label: presenterLabel });
+      this.sortPresenterOptions();
+    }
+    sortPresenterOptions() {
+      this.presenterChecks.sort((a, b) => a.name.textContent.localeCompare(b.name.textContent, 'pt-BR', { sensitivity: 'base' }));
+      const grid = document.getElementById('agent-presenter-grid');
+      for (const item of this.presenterChecks) grid.append(item.label);
+    }
+    sortAgentCards() {
+      const ordered = [...this.agentCards.entries()].sort(([idA], [idB]) =>
+        this.agentCardNames.get(idA).textContent.localeCompare(this.agentCardNames.get(idB).textContent, 'pt-BR', { sensitivity: 'base' }));
+      const grid = document.getElementById('agent-grid');
+      for (const [, card] of ordered) grid.append(card.label);
     }
     agentLoaded(entry, agent) {
       const card = this.agentCards.get(entry.id);
@@ -256,9 +268,15 @@
     }
     refreshAgentName(id) {
       const label = this.agentCardNames.get(id);
-      if (label) label.textContent = this.agentName(id);
+      if (label) {
+        label.textContent = this.agentName(id);
+        this.sortAgentCards();
+      }
       const presenter = this.presenterChecks.find(item => item.id === id);
-      if (presenter) presenter.name.textContent = this.agentName(id);
+      if (presenter) {
+        presenter.name.textContent = this.agentName(id);
+        this.sortPresenterOptions();
+      }
     }
     open() {
       app.hideStartupLoading?.();

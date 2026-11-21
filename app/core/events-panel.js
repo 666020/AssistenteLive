@@ -31,6 +31,14 @@
         this.localEditorPreviewImage.hidden = false;
         if (app.merlinSettings?.imageLayout?.().size === 'auto') app.fitImagesToText(this.localEditorPreview, this.localEditorPreviewMessage, '.event-announcement-image');
       });
+      this.bindAnnouncementPreview(this.localEditorPreview, () => {
+        const message = this.localMessageInput.value.trim();
+        if (!message) return null;
+        return {
+          source: 'local', id: this.editingLocalId || 'local-draft-preview', title: message.slice(0, 80), message,
+          imageUrl: this.localImageInput.value.trim(), imagePosition: this.localImagePosition
+        };
+      });
       this.localSaveButton = document.getElementById('local-announcement-save');
       this.localCancelButton = document.getElementById('local-announcement-cancel');
       this.localEditorTitle = document.getElementById('local-announcement-editor-title');
@@ -138,7 +146,6 @@
       });
       selector.events = this;
       this.setActiveEvents([]);
-
       this.update(); this.startBackgroundSync();
     }
 
@@ -279,7 +286,6 @@
         const saved = JSON.parse(localStorage.getItem(SELECTION_KEY) || 'null');
         if (saved && Array.isArray(saved.selected) && Array.isArray(saved.known)) {
           const migrate = value => {
-
             if (typeof value !== 'string') return '';
             try {
               const parts = JSON.parse(value);
@@ -321,7 +327,6 @@
         this.knownKeys.add(key);
       }
       this.saveSelection();
-      app.merlinSettings?.setAnnouncementPreviewRecords(this.remoteEvents);
       this.renderEvents();
       this.update();
     }
@@ -341,6 +346,33 @@
 
     selectedLocalEvents() {
       return this.localEvents.filter(event => this.selectedKeys.has(eventKey(event)));
+    }
+
+    bindAnnouncementPreview(preview, eventFactory) {
+      if (!preview) return;
+      preview.title = 'Dê dois cliques para anunciar esta mensagem';
+      preview.setAttribute('role', 'button');
+      preview.tabIndex = 0;
+      preview.addEventListener('dblclick', () => {
+        const event = eventFactory();
+        if (event) void this.announcePreview(event);
+      });
+      preview.addEventListener('keydown', keyboardEvent => {
+        if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ') return;
+        keyboardEvent.preventDefault();
+        const event = eventFactory();
+        if (event) void this.announcePreview(event);
+      });
+    }
+
+    announcePreview(event) {
+      if (this.loading || this.running || this.selector.busy || !this.selector.presenterIds.length) {
+        this.status.textContent = this.selector.presenterIds.length
+          ? 'Aguarde a operação atual terminar para anunciar esta mensagem.'
+          : 'Selecione pelo menos um Agent para apresentar a mensagem.';
+        return;
+      }
+      void this.runQueue(null, [event]);
     }
 
     updateStatusCount() {
@@ -376,6 +408,7 @@
         label.append(input); card.append(label);
         const layout = app.merlinSettings?.imageLayout?.() || {};
         const preview = document.createElement('div');
+        this.bindAnnouncementPreview(preview, () => event);
         app.merlinSettings?.applyBubbleColor?.(preview, layout.bubbleColor);
         const bubbleWidth = layout.bubbleWidth === 'auto' ? 'max' : layout.bubbleWidth || 'max';
         preview.className = `event-announcement-preview image-${this.imagePosition} image-size-${layout.size || 'medium'} message-width-${bubbleWidth} mastery-text-${layout.fontSize || 'medium'} message-font-${layout.fontFamily || 'arial'}`;
@@ -420,10 +453,10 @@
         input.addEventListener('change', () => {
           if (input.checked) this.selectedKeys.add(key); else this.selectedKeys.delete(key);
           this.saveSelection(); this.renderEvents(); this.update(); this.updateStatusCount();
-
         });
         label.append(input); card.append(label);
         const preview = document.createElement('div');
+        this.bindAnnouncementPreview(preview, () => event);
         app.merlinSettings?.applyBubbleColor?.(preview, layout.bubbleColor);
         const bubbleWidth = layout.bubbleWidth === 'auto' ? 'max' : layout.bubbleWidth || 'max';
         preview.className = `event-announcement-preview image-${this.localImagePosition} image-size-${layout.size || 'medium'} message-width-${bubbleWidth} mastery-text-${layout.fontSize || 'medium'} message-font-${layout.fontFamily || 'arial'}`;
@@ -561,7 +594,6 @@
             ...event,
             readingMs: (local ? this.localReadingSeconds : this.readingSeconds) * 1000,
             ...(local ? { imagePosition: this.localImagePosition } : {})
-
           }, signal);
           app.checkSignal(signal);
           if (success === false) throw new Error('A sequência foi interrompida por uma falha na apresentação.');

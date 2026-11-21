@@ -2,11 +2,8 @@
   'use strict';
   const app = window.AssistenteLive;
   const STORAGE_KEY = 'AssistenteLive.merlinQueue.v1';
-  const CATALOG_STORAGE_KEY = 'AssistenteLive.hallCatalog.v2';
   const COLLECTION_SETTINGS_KEY = 'AssistenteLive.merlinCollection.v1';
   const DEFAULT_POLL_INTERVAL_MS = 30 * 1000;
-  const COLLECTION_CACHE_TTL_MS = 30 * 1000;
-  const CATALOG_TTL_MS = 5 * 60 * 1000;
   const MAX_ROWS = 5000;
   const MAX_COLLECTION_PREVIEW_ROWS = 200;
 
@@ -32,16 +29,20 @@
       this.autoCollectInput.checked = this.collectionSettings.enabled;
       this.showCollectedInput.checked = this.collectionSettings.showList;
       this.collectedList.hidden = !this.collectionSettings.showList;
-      this.hallCatalog = this.loadHallCatalogCache();
       this.cache = this.loadCache();
+      this.applyHistoryPolicy(false, true);
       selector.merlinSettings.setPreviewRecords(this.cache.records);
-      selector.merlinSettings.setAvailableMembers(this.activeMemberOptions(this.cache.records));
-      this.refreshButton.addEventListener('click', () => { void this.sync(true); });
+      selector.merlinSettings.setAvailableMembers(this.cache.catalog?.members || this.activeMemberOptions(this.cache.records));
+      selector.merlinSettings.setAvailableConsoles(this.cache.catalog?.consoles || this.cache.records.map(record => record.console));
+      this.refreshButton.addEventListener('click', () => {
+        this.applyHistoryPolicy(true, true);
+        void this.sync(true);
+      });
       this.autoCollectInput.addEventListener('change', () => {
         this.collectionSettings.enabled = this.autoCollectInput.checked;
         this.saveCollectionSettings();
         if (this.collectionSettings.enabled) {
-          void this.sync(true);
+          void this.sync(false);
           this.schedulePoll();
         } else {
           clearTimeout(this.pollTimer);
@@ -63,7 +64,7 @@
       }
       selector.merlinPanel = this;
       this.updateControls();
-      if (this.collectionSettings.enabled) void this.sync(true);
+      if (this.collectionSettings.enabled) void this.sync(false);
       this.schedulePoll();
     }
 
@@ -89,14 +90,17 @@
           return {
             version: 1, initialized: Boolean(saved.initialized), syncedAt: Number(saved.syncedAt) || 0,
             policy: saved.policy === 'new-only' ? 'new-only' : 'unannounced',
+            historyCutoffAt: Number.isFinite(Number(saved.historyCutoffAt)) ? Number(saved.historyCutoffAt) : 0,
             resetAllPending: Boolean(saved.resetAllPending),
+            revision: String(saved.revision || ''),
+            catalog: saved.catalog && typeof saved.catalog === 'object' && Array.isArray(saved.catalog.members) && Array.isArray(saved.catalog.consoles) ? saved.catalog : null,
             records: saved.records.filter(row => row && typeof row.key === 'string' && row.key),
             shown: saved.shown && typeof saved.shown === 'object' ? saved.shown : {},
             ignored: Array.isArray(saved.ignored) ? saved.ignored.filter(key => typeof key === 'string') : []
           };
         }
       } catch {}
-      return { version: 1, initialized: false, syncedAt: 0, policy: '', resetAllPending: false, records: [], shown: {}, ignored: [] };
+      return { version: 1, initialized: false, syncedAt: 0, policy: '', historyCutoffAt: 0, resetAllPending: false, revision: '', catalog: null, records: [], shown: {}, ignored: [] };
     }
 
     save() {
@@ -126,6 +130,16 @@
       }
     }
 
+    refreshPreviewWidths() {
+      const width = app.merlinSettings.imageLayout().bubbleWidth || 'max';
+      for (const bubble of this.list.querySelectorAll('.merlin-queue-preview')) {
+        bubble.classList.remove('message-width-auto', 'message-width-320', 'message-width-400', 'message-width-480', 'message-width-640', 'message-width-800', 'message-width-1000', 'message-width-1200', 'message-width-max');
+        bubble.classList.add(`message-width-${width}`);
+        bubble.style.setProperty('--message-width', `${width === 'max' ? 0 : width}px`);
+      }
+      this.fitAutoImages();
+    }
+
     refreshNamePreviews({ memberId = null } = {}) {
       const settings = app.merlinSettings;
       for (const item of this.list.querySelectorAll('.merlin-queue-item')) {
@@ -135,7 +149,7 @@
         const text = item.querySelector('.mastery-text');
         if (text) {
           text.replaceChildren();
-          app.appendFormattedText(text, app.merlinMessage.render(settings.value.template, {
+          app.appendFormattedText(text, app.merlinMessage.render(settings.templateFor(record), {
             Membro: settings.memberName(record.memberId, record.member), Jogo: record.game, Console: settings.consoleName(record.console),
             Tempo: record.time, Evento: record.activity
           }, settings.value.timeFormat));
@@ -154,7 +168,7 @@
       this.pollTimer = null;
       if (!this.collectionSettings.enabled) return;
       this.pollTimer = setTimeout(async () => {
-        await this.sync(true);
+        await this.sync(false);
         this.schedulePoll();
       }, DEFAULT_POLL_INTERVAL_MS);
     }
@@ -166,21 +180,31 @@
 
     async sync(force) {
       if (this.loading) return;
-      if (!force && this.cache.initialized && Date.now() - this.cache.syncedAt <= COLLECTION_CACHE_TTL_MS) return;
+      if (!force && !this.collectionSettings.enabled) return;
       const signal = app.workController.signal;
       this.loading = true;
       this.updateControls();
-      this.status.textContent = 'Lendo as masterizações diretamente no Google Sheets…';
-      this.collectStatus.textContent = 'Lendo a aba Masterizações do Google Sheets…';
+      this.status.textContent = force || !this.cache.initialized ? 'Lendo as masterizações do Google Sheets…' : 'Verificando se há novas masterizações…';
+      this.collectStatus.textContent = force || !this.cache.initialized ? 'Lendo a aba Masterizações do Google Sheets…' : 'Verificando a versão da aba Masterizações…';
       const controller = new AbortController();
       const cancel = () => controller.abort();
       signal.addEventListener('abort', cancel, { once: true });
       const timer = setTimeout(cancel, 20000);
       try {
         const config = app.eventsConfig;
+        const marker = await this.readRevision(config, controller.signal);
+        const revision = marker.revision;
+        app.checkSignal(signal);
+        if (controller.signal.aborted) throw app.abortError();
+        if (!force && this.cache.initialized && revision && revision === this.cache.revision && this.cache.policy === this.policy()) {
+          this.cache.syncedAt = Date.now();
+          this.status.textContent = `Sem mudanças nas masterizações. Versão ${revision}; verificada às ${this.date(this.cache.syncedAt)}.`;
+          this.collectStatus.textContent = `Sem novas masterizações. Versão ${revision}; próxima verificação em 30 s.`;
+          return;
+        }
         const url = new URL(`https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq`);
         url.search = new URLSearchParams({
-          tqx: 'out:csv', sheet: config.masteriesSheetName, range: 'A1:K5000', headers: '1', t: String(Date.now())
+          tqx: 'out:csv', sheet: config.masteriesSheetName, range: 'A1:M5000', headers: '1', t: String(Date.now())
         }).toString();
         const response = await fetch(url.href, {
           method: 'GET', mode: 'cors', credentials: 'omit', cache: 'no-store',
@@ -191,26 +215,20 @@
         app.checkSignal(signal);
         if (controller.signal.aborted) throw app.abortError();
         const rows = this.parseSheet(csv);
-        const catalog = await this.loadHallCatalog(signal);
-        this.selector.merlinSettings.setAvailableConsoles(Object.values(catalog.games).map(game => game.console));
-        this.selector.merlinSettings.setAvailableMembers(this.activeMemberOptions(rows));
-        for (const row of rows) {
-          const hallGame = catalog.games[row.gameId] || catalog.gamesByName[this.normalizeCatalogName(row.game)] || {};
-          row.console = row.console || hallGame.console || '';
-          // Prefer the Hall badge; fall back to the game image URL captured in the Masterizações sheet.
-          row.image = hallGame.image || row.image || '';
-          row.memberImage = catalog.members[row.memberId] || '';
-        }
+        this.cache.catalog = marker.catalog;
+        this.selector.merlinSettings.setAvailableMembers(marker.catalog?.members || this.activeMemberOptions(rows));
+        this.selector.merlinSettings.setAvailableConsoles(marker.catalog?.consoles || rows.map(row => row.console));
         this.merge(rows);
         this.selector.merlinSettings.setPreviewRecords(this.cache.records);
         this.deferAuto = false;
         this.cache.syncedAt = Date.now();
+        this.cache.revision = revision;
         this.cache.initialized = true;
         this.cache.resetAllPending = false;
         this.cache.policy = this.policy();
         this.save();
         this.status.textContent = `Coleta concluída: ${this.cache.records.length} masterização(ões) no cache local. ${this.counts().pending} pendente(s).`;
-        this.collectStatus.textContent = `Coleta concluída: ${this.cache.records.length} masterização(ões). Atualização automática ${this.collectionSettings.enabled ? 'a cada 30 s' : 'desativada'}.`;
+        this.collectStatus.textContent = `Coleta concluída: ${this.cache.records.length} masterização(ões), versão ${revision || 'não informada'}. Próxima verificação ${this.collectionSettings.enabled ? 'em 30 s' : 'manual'}.`;
         this.render();
       } catch (error) {
         this.status.textContent = signal.aborted ? 'Coleta cancelada.'
@@ -229,127 +247,59 @@
 
     policy() { return app.merlinSettings?.value?.historyPolicy || 'new-only'; }
 
-    loadHallCatalogCache() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(CATALOG_STORAGE_KEY) || 'null');
-        if (saved?.version === 5 && saved.games && typeof saved.games === 'object' && saved.members && typeof saved.members === 'object') {
-          return {
-            syncedAt: Number(saved.syncedAt) || 0, games: saved.games, gamesByName: saved.gamesByName || {}, members: saved.members,
-            memberNames: saved.memberNames && typeof saved.memberNames === 'object' ? saved.memberNames : {},
-            activeMemberIds: Array.isArray(saved.activeMemberIds) ? saved.activeMemberIds.filter(id => /^\d+$/.test(String(id))).map(String) : []
-          };
-        }
-      } catch {}
-      return { syncedAt: 0, games: {}, gamesByName: {}, members: {}, memberNames: {}, activeMemberIds: [] };
+    applyHistoryPolicy(refresh = true, resetWindow = false) {
+      const policy = this.policy();
+      const changed = this.cache.policy !== policy;
+      const hasCutoff = Number.isFinite(Number(this.cache.historyCutoffAt)) && Number(this.cache.historyCutoffAt) > 0;
+      const needsUpdate = policy === 'new-only'
+        ? resetWindow || !hasCutoff
+        : hasCutoff || this.cache.ignored.length > 0;
+      if (!changed && !needsUpdate) return false;
+      this.cache.historyCutoffAt = policy === 'new-only' ? Math.floor(Date.now() / 1000) * 1000 - 999 : 0;
+      this.cache.ignored = [];
+      this.cache.resetAllPending = false;
+      this.cache.policy = policy;
+      this.save();
+      if (refresh) {
+        this.render();
+        this.updateControls();
+      }
+      if (policy === 'unannounced') this.processPending();
+      return true;
     }
 
-    normalizeCatalogName(value) {
-      return String(value || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
+    isAfterHistoryCutoff(record) {
+      if (this.policy() !== 'new-only') return true;
+      const detectedAt = Date.parse(record?.detectedAt || '');
+      const cutoff = Number(this.cache.historyCutoffAt) || 0;
+      return cutoff > 0 && Number.isFinite(detectedAt) && detectedAt > cutoff;
     }
 
     activeMemberOptions(records = []) {
-      const activeIds = new Set((this.hallCatalog.activeMemberIds || []).map(String));
-      const activeNames = Object.entries(this.hallCatalog.memberNames || {})
-        .filter(([memberId]) => activeIds.has(String(memberId)))
-        .map(([memberId, member]) => ({ memberId, member }));
-      return [...activeNames, ...records.filter(record => activeIds.has(String(record.memberId || '')))];
+      return [...new Map(records.map(record => [String(record.memberId || ''), { memberId: String(record.memberId || ''), member: String(record.member || '').trim() }]).filter(([id, item]) => id && item.member)).values()];
     }
 
-    async loadHallCatalog(signal) {
-      if (this.hallCatalog.syncedAt && Date.now() - this.hallCatalog.syncedAt < CATALOG_TTL_MS) return this.hallCatalog;
-      const config = app.eventsConfig;
-      const normalize = value => String(value || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-      const idFrom = value => {
-        const text = String(value || '').trim();
-        const match = /(?:retroachievements\.org\/(?:game|game\/))([0-9]{1,10})/i.exec(text) || /(?:^|\D)([0-9]{1,10})(?:\D|$)/.exec(text);
-        return match?.[1] || '';
-      };
-      const urlFrom = value => /https?:\/\/[^\s"')]+/i.exec(String(value || ''))?.[0] || '';
-      let sheets;
+    async readRevision(config, signal) {
+      const url = new URL(`https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq`);
+      url.search = new URLSearchParams({ tqx: 'out:csv', sheet: config.masteriesSheetName, range: 'N2:O2', headers: '0', t: String(Date.now()) }).toString();
+      const response = await fetch(url.href, { method: 'GET', mode: 'cors', credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer', signal });
+      if (!response.ok) throw new Error(`Google Sheets respondeu HTTP ${response.status} ao verificar a versão.`);
+      const rows = app.parseCSV(await response.text());
+      let catalog = null;
       try {
-        sheets = await Promise.all(config.hallCatalogTabs.map(async tab => {
-          const url = new URL(`https://docs.google.com/spreadsheets/d/e/${config.hallPublishedId}/pub`);
-          url.search = new URLSearchParams({ gid: tab.gid, single: 'true', output: 'csv' }).toString();
-          const response = await fetch(url.href, { method: 'GET', mode: 'cors', credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer', signal });
-          if (!response.ok) throw new Error(`Catálogo Hall (${tab.name}) respondeu HTTP ${response.status}.`);
-          const rows = app.parseCSV(await response.text());
-          let links = [];
-          try {
-            const htmlUrl = new URL(`https://docs.google.com/spreadsheets/d/e/${config.hallPublishedId}/pubhtml/sheet`);
-            htmlUrl.search = new URLSearchParams({ headers: 'false', gid: tab.gid }).toString();
-            const htmlResponse = await fetch(htmlUrl.href, { method: 'GET', mode: 'cors', credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer', signal });
-            if (htmlResponse.ok) {
-              const table = /<table\b[^>]*class=["'][^"']*waffle[^"']*["'][^>]*>([\s\S]*?)<\/table>/i.exec(await htmlResponse.text())?.[1] || '';
-              links = [...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].slice(1).map(match => [...match[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(cell => {
-                const href = /<a\b[^>]*href=["']([^"']+)["']/i.exec(cell[1])?.[1] || '';
-                return href.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-              }));
-            }
-          } catch {}
-          return { tab: tab.name, rows, links };
-        }));
-      } catch {
-        return this.hallCatalog;
-      }
-      const games = {};
-      const gamesByName = {};
-      const members = {};
-      const memberNames = {};
-      const activeMemberIds = new Set();
-      for (const { tab, rows, links } of sheets) {
-        if (!rows.length) continue;
-        const headers = rows.shift().map(normalize);
-        const index = names => headers.findIndex(header => names.some(name => header === normalize(name)));
-        const cell = (row, ...names) => {
-          const position = index(names);
-          return position < 0 ? '' : String(row[position] || '').trim();
-        };
-        if (normalize(tab) === 'membros') {
-          const idColumn = index(['ID', 'MEMBRO ID']);
-          const photoColumn = index(['FOTO', 'IMAGEM', 'AVATAR']);
-          const memberNameColumn = index(['MEMBRO', 'NOME', 'NOME DO MEMBRO', 'MEMBER', 'NOME EXIBIDO']);
-          const statusColumn = index(['STATUS', 'SITUACAO']);
-          if (idColumn >= 0 && statusColumn >= 0) {
-            for (const [rowIndex, row] of rows.entries()) {
-              const memberId = String(row[idColumn] || '').trim();
-              const status = normalize(row[statusColumn]);
-              if (!/^\d+$/.test(memberId) || !['ativo', 'ativa', 'active'].includes(status)) continue;
-              activeMemberIds.add(memberId);
-              const photo = photoColumn >= 0 ? urlFrom(cell(row, 'FOTO', 'IMAGEM', 'AVATAR')) || urlFrom(links[rowIndex]?.[photoColumn]) : '';
-              const name = memberNameColumn >= 0 ? String(row[memberNameColumn] || '').trim() : '';
-              if (photo) members[memberId] = photo;
-              if (name) memberNames[memberId] = name;
-            }
-          }
-          continue;
-        }
-        for (const [rowIndex, row] of rows.entries()) {
-          const linkColumn = index(['LINK RA']);
-          const id = idFrom(cell(row, 'LINK RA', 'JOGO ID', 'JOGO RA ID', 'ID RA', 'RA ID')) || (linkColumn < 0 ? '' : idFrom(links[rowIndex]?.[linkColumn]));
-          const gameName = cell(row, 'NOME DO JOGO', 'NOME JOGO', 'JOGO', 'NOME', 'GAME', 'GAME NAME');
-          if (!id && !gameName) continue;
-          const imageColumn = index(['BADGE', 'BADGE DO JOGO', 'IMAGEM']);
-          const image = urlFrom(cell(row, 'BADGE', 'BADGE DO JOGO', 'IMAGEM')) || (imageColumn < 0 ? '' : urlFrom(links[rowIndex]?.[imageColumn]));
-          const gameConsole = cell(row, 'CONSOLE', 'PLATAFORMA', 'SISTEMA');
-          const existing = id ? games[id] || { console: '', image: '' } : { console: '', image: '' };
-          const details = { console: gameConsole || existing.console, image: existing.image || image };
-          if (id) games[id] = details;
-          if (gameName) gamesByName[this.normalizeCatalogName(gameName)] = details;
-        }
-      }
-      this.hallCatalog = { syncedAt: Date.now(), games, gamesByName, members, memberNames, activeMemberIds: [...activeMemberIds] };
-      try { localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify({ version: 5, ...this.hallCatalog })); } catch {}
-      return this.hallCatalog;
+        const parsed = JSON.parse(String(rows[0]?.[1] || ''));
+        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.members) && Array.isArray(parsed.consoles)) catalog = parsed;
+      } catch {}
+      return { revision: String(rows[0]?.[0] || '').trim(), catalog };
     }
-
     parseSheet(csv) {
       if (/^\s*</.test(csv)) throw new Error('O Google não liberou a planilha para leitura direta. Confira o compartilhamento de leitor.');
       const rows = app.parseCSV(csv);
       const normalize = value => String(value || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
       const headers = (rows.shift() || []).map(normalize);
       const expected = ['chave', 'detectado em', 'membro id', 'membro', 'usuario ra', 'jogo ra id', 'jogo', 'imagem', 'origem', 'evento/sorteio'];
-      if (expected.some((header, index) => headers[index] !== header) || (headers.length > 11) || (headers.length === 11 && headers[10] !== 'tempo')) {
-        throw new Error('Cabeçalhos da aba Masterizações diferentes do esperado. Confira as colunas Chave até Tempo.');
+      if (expected.some((header, index) => headers[index] !== header) || headers.length > 13 || (headers.length >= 11 && headers[10] !== 'tempo') || (headers.length >= 12 && headers[11] !== 'console') || (headers.length >= 13 && headers[12] !== 'imagem membro')) {
+        throw new Error('Cabeçalhos da aba Masterizações diferentes do esperado. Confira as colunas Chave até Imagem membro.');
       }
       if (headers.length < 10) throw new Error('A aba Masterizações está sem todas as colunas necessárias.');
       const records = rows.map(row => ({
@@ -357,6 +307,7 @@
         gameId: String(row[5] || '').trim(),
         memberId: String(row[2] || '').trim(), member: String(row[3] || '').trim(), raUser: String(row[4] || '').trim(),
         game: String(row[6] || '').trim(), image: String(row[7] || '').trim(),
+        console: String(row[11] || '').trim(), memberImage: String(row[12] || '').trim(),
         activity: String(row[9] || '').trim(),
         time: headers[10] ? String(row[10] || '').trim() : ''
       })).filter(row => row.key && row.member && row.game);
@@ -369,46 +320,40 @@
       const shown = { ...this.cache.shown };
       const ignored = new Set(this.cache.ignored);
       const policy = this.policy();
-      const firstCollection = !this.cache.initialized;
-      const policyChanged = this.cache.initialized && this.cache.policy !== policy;
-      if (policyChanged && policy === 'new-only' && !this.cache.resetAllPending) {
-        for (const record of this.cache.records) if (!shown[record.key]) ignored.add(record.key);
-      } else if (policyChanged && policy === 'unannounced') {
-        for (const record of this.cache.records) ignored.delete(record.key);
-      }
+      if (policy === 'unannounced') ignored.clear();
       const records = rows.map(row => ({
         key: String(row.key || '').trim(), detectedAt: String(row.detectedAt || ''),
         memberId: String(row.memberId || ''), member: String(row.member || ''), raUser: String(row.raUser || ''),
         gameId: String(row.gameId || ''), game: String(row.game || ''), console: String(row.console || ''), image: String(row.image || ''), memberImage: String(row.memberImage || ''),
         activity: String(row.activity || ''), time: row.time == null ? '' : String(row.time)
       })).filter(row => row.key && row.member && row.game);
-      if (firstCollection && policy === 'new-only' && !this.cache.resetAllPending) {
-        for (const record of records) ignored.add(record.key);
-      } else {
-        for (const record of records) {
-          if (!oldByKey.has(record.key)) ignored.delete(record.key);
-        }
+      for (const record of records) {
+        if (!oldByKey.has(record.key)) ignored.delete(record.key);
       }
       this.cache.records = records;
       this.cache.shown = shown;
       this.cache.ignored = [...ignored];
+      this.cache.policy = policy;
     }
 
     counts() {
       const ignored = new Set(this.cache.ignored);
       let announced = 0, skipped = 0;
       for (const record of this.cache.records) {
-        if (app.merlinSettings?.isMemberHidden(record.memberId)) continue;
+        if (app.merlinSettings?.isMemberHidden(record.memberId) || !this.isAfterHistoryCutoff(record)) continue;
         if (this.cache.shown[record.key]) announced++;
         else if (ignored.has(record.key)) skipped++;
+        else if (app.merlinSettings?.isRecruitment(record) && !app.merlinSettings.value.recruitsEnabled) skipped++;
       }
-      const visibleCount = this.cache.records.filter(record => !app.merlinSettings?.isMemberHidden(record.memberId)).length;
+      const visibleCount = this.cache.records.filter(record => !app.merlinSettings?.isMemberHidden(record.memberId) && this.isAfterHistoryCutoff(record)).length;
       return { announced, skipped, pending: visibleCount - announced - skipped };
     }
 
     state(record) {
       if (this.cache.shown[record.key]) return 'Anunciada';
+      if (!this.isAfterHistoryCutoff(record)) return 'Anterior ao início atual';
       if (this.cache.ignored.includes(record.key)) return 'Ignorada pela configuração';
+      if (app.merlinSettings?.isRecruitment(record) && !app.merlinSettings.value.recruitsEnabled) return 'Desativada nas configurações do balão';
       return 'Pendente';
     }
 
@@ -420,14 +365,16 @@
       summary.textContent = `${counts.pending} pendente(s) · ${counts.announced} anunciada(s) · ${counts.skipped} ignorada(s)`;
       const fragment = document.createDocumentFragment();
       fragment.append(summary);
-      const ordered = this.cache.records.filter(record => !app.merlinSettings?.isMemberHidden(record.memberId)).sort((a, b) => (Date.parse(b.detectedAt) || 0) - (Date.parse(a.detectedAt) || 0));
+      const ordered = [...this.cache.records].sort((a, b) => (Date.parse(b.detectedAt) || 0) - (Date.parse(a.detectedAt) || 0));
       for (const record of ordered) {
         const item = document.createElement('article');
         item.className = 'merlin-queue-item';
         item._merlinRecord = record;
         const heading = document.createElement('strong');
         heading.textContent = `${app.merlinSettings.memberName(record.memberId, record.member)} — ${record.game}`;
-        item.append(heading, this.messagePreview(record));
+        const preview = this.messagePreview(record);
+        this.bindAnnouncementPreview(preview, record);
+        item.append(heading, preview);
         const detail = document.createElement('span');
         const time = Number.isFinite(Number(record.time)) && record.time !== '' ? `${record.time} s` : 'tempo não informado';
         detail.textContent = `${this.date(record.detectedAt)} · ${time}`;
@@ -442,7 +389,7 @@
       if (!ordered.length) {
         const empty = document.createElement('p');
         empty.className = 'merlin-queue-empty';
-        empty.textContent = 'A fila está vazia. Use “Atualizar agora” nesta aba para coletar as linhas.';
+        empty.textContent = 'Nenhuma masterização foi coletada ainda. Use “Atualizar agora” para ler a planilha.';
         fragment.append(empty);
       }
       this.list.replaceChildren(fragment);
@@ -495,12 +442,80 @@
       }
       const text = document.createElement('p');
       text.className = 'mastery-text';
-      app.appendFormattedText(text, app.merlinMessage.render(settings.value.template, {
+      app.appendFormattedText(text, app.merlinMessage.render(settings.templateFor(record), {
         Membro: settings.memberName(record.memberId, record.member), Jogo: record.game, Console: settings.consoleName(record.console),
         Tempo: record.time, Evento: record.activity
       }, settings.value.timeFormat));
       bubble.append(text);
       return bubble;
+    }
+
+    bindAnnouncementPreview(preview, record) {
+      preview.title = 'Dê dois cliques para anunciar esta masterização';
+      preview.setAttribute('role', 'button');
+      preview.tabIndex = 0;
+      preview.addEventListener('dblclick', () => { void this.announceRecord(record); });
+      preview.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        void this.announceRecord(record);
+      });
+    }
+
+    async announceRecord(record) {
+      if (this.loading || this.running || this.selector.busy || this.selector.events?.running) {
+        this.status.textContent = 'Aguarde a operação atual terminar para anunciar esta masterização.';
+        return;
+      }
+      const settings = app.merlinSettings;
+      if (settings.isMemberHidden(record.memberId)) {
+        this.status.textContent = 'Este membro está oculto nas configurações e não pode ser anunciado.';
+        return;
+      }
+      if (settings.isRecruitment(record) && !settings.value.recruitsEnabled) {
+        this.status.textContent = 'Ative os anúncios de recrutamento na aba Balão de conversa para apresentar esta mensagem.';
+        return;
+      }
+      const presenterId = this.selector.nextPresenter();
+      if (!presenterId) {
+        this.status.textContent = 'Selecione pelo menos um Agent para apresentar as masterizações.';
+        return;
+      }
+      const signal = app.workController.signal;
+      this.running = true;
+      this.selector.close();
+      this.selector.events?.auto?.pause();
+      this.selector.setBusy(true);
+      this.updateControls();
+      try {
+        const text = app.merlinMessage.render(settings.templateFor(record), {
+          Membro: settings.memberName(record.memberId, record.member), Jogo: record.game,
+          Console: settings.consoleName(record.console), Tempo: record.time, Evento: record.activity
+        }, settings.value.timeFormat);
+        const message = {
+          text, images: settings.imageOptions(record), displayOptions: settings.imageLayout(),
+          readingMs: settings.value.readingSeconds * 1000, mastery: true,
+          soundCategory: settings.isRecruitment(record) ? 'recruits' : 'masterizations'
+        };
+        this.status.textContent = `${this.selector.agentName(presenterId)} apresenta ${settings.memberName(record.memberId, record.member)} — ${record.game}`;
+        const ok = await this.present(presenterId, 'evento', null, signal, [message], async () => {
+          this.cache.shown[record.key] = { at: new Date().toISOString() };
+          this.cache.ignored = this.cache.ignored.filter(key => key !== record.key);
+          this.save();
+          this.status.textContent = `Anunciada: ${settings.memberName(record.memberId, record.member)} — ${record.game}`;
+          this.render();
+        });
+        app.checkSignal(signal);
+        if (!ok) throw new Error('A apresentação falhou. A masterização não foi marcada como anunciada.');
+      } catch (error) {
+        if (error.name !== 'AbortError') this.status.textContent = error.message;
+      } finally {
+        this.running = false;
+        this.selector.setBusy(false);
+        this.selector.events?.auto?.resume();
+        this.updateControls();
+        this.processPending();
+      }
     }
 
     updateControls() {
@@ -514,15 +529,17 @@
       if (this.loading || this.running) return;
       try {
         localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(CATALOG_STORAGE_KEY);
+        localStorage.removeItem('AssistenteLive.hallCatalog.v2');
         localStorage.removeItem('AssistenteLive.hallCatalog.v1');
       } catch {}
-      this.cache = { version: 1, initialized: false, syncedAt: 0, policy: this.policy(), resetAllPending: true, records: [], shown: {}, ignored: [] };
-      this.hallCatalog = { syncedAt: 0, games: {}, members: {}, memberNames: {}, activeMemberIds: [] };
+      this.cache = { version: 1, initialized: false, syncedAt: 0, policy: this.policy(), historyCutoffAt: 0, resetAllPending: false, revision: '', catalog: null, records: [], shown: {}, ignored: [] };
+      this.applyHistoryPolicy(false, true);
       this.deferAuto = false;
       app.merlinMessage.invalidateHallMemberImageCache();
       this.selector.merlinSettings.setPreviewRecords([]);
-      this.status.textContent = 'Cache das masterizações, catálogo e fotos do Hall apagado. Buscando tudo novamente…';
+      this.selector.merlinSettings.setAvailableMembers([]);
+      this.selector.merlinSettings.setAvailableConsoles([]);
+      this.status.textContent = 'Cache das masterizações apagado. Buscando novamente…';
       this.render();
       void this.sync(true);
     }
@@ -537,7 +554,7 @@
     async announcePending() {
       if (this.loading || this.running || this.selector.busy || this.selector.events?.running || !this.selector.presenterIds.length) return;
       const pending = this.cache.records
-        .filter(record => !app.merlinSettings.isMemberHidden(record.memberId) && this.state(record) === 'Pendente')
+        .filter(record => this.isAfterHistoryCutoff(record) && !app.merlinSettings.isMemberHidden(record.memberId) && (!app.merlinSettings.isRecruitment(record) || app.merlinSettings.value.recruitsEnabled) && this.state(record) === 'Pendente')
         .sort((a, b) => (Date.parse(a.detectedAt) || 0) - (Date.parse(b.detectedAt) || 0));
       if (!pending.length) return;
       const signal = app.workController.signal;
@@ -551,13 +568,14 @@
       try {
         const settings = app.merlinSettings;
         const messages = pending.map(record => {
-          const text = app.merlinMessage.render(settings.value.template, {
+          const text = app.merlinMessage.render(settings.templateFor(record), {
             Membro: settings.memberName(record.memberId, record.member), Jogo: record.game, Console: settings.consoleName(record.console), Tempo: record.time,
             Evento: record.activity
           }, settings.value.timeFormat);
           return {
             text, images: settings.imageOptions(record), displayOptions: settings.imageLayout(),
-            readingMs: settings.value.readingSeconds * 1000, mastery: true, soundCategory: 'masterizations'
+            readingMs: settings.value.readingSeconds * 1000, mastery: true,
+            soundCategory: settings.isRecruitment(record) ? 'recruits' : 'masterizations'
           };
         });
         this.status.textContent = `Anunciando sequência de ${pending.length} masterização(ões), da mais antiga para a mais recente…`;
@@ -602,4 +620,5 @@
     }
   };
 })();
+
 

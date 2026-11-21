@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AssistenteHall — 0.24.61</title>
-  <link rel="stylesheet" href="styles/overlay.css?v=0.24.61">
-  <script defer src="core/default-settings.js?v=0.24.61"></script>
+  <title>AssistenteHall — 0.24.76</title>
+  <link rel="stylesheet" href="styles/overlay.css?v=0.24.76">
   <script defer src="agents/merlin/merlin-data.js"></script>
   <script defer src="agents/clippy/clippy-data.js"></script>
   <script defer src="agents/bonzi/bonzi-data.js"></script>
@@ -22,20 +21,20 @@
   <script defer src="core/text-format.js"></script>
   <script defer src="data/eventos-config.js"></script>
   <script defer src="core/events.js"></script>
-  <script defer src="core/events-panel.js?v=0.24.59"></script>
+  <script defer src="core/events-panel.js?v=0.24.76"></script>
   <script defer src="core/events-auto.js?v=0.24.52"></script>
   <script defer src="core/agents.js"></script>
   <script defer src="core/runtime.js"></script>
   <script defer src="core/animation.js"></script>
-  <script defer src="core/event-image.js?v=0.24.60"></script>
+  <script defer src="core/event-image.js?v=0.24.51"></script>
   <script defer src="core/presentation.js"></script>
   <script defer src="core/tabs.js"></script>
-  <script defer src="core/merlin-settings.js"></script>
-  <script defer src="core/merlin-panel.js"></script>
-  <script defer src="core/configuration.js?v=0.24.59"></script>
+  <script defer src="core/merlin-settings.js?v=0.24.76"></script>
+  <script defer src="core/merlin-panel.js?v=0.24.76"></script>
+  <script defer src="core/configuration.js?v=0.24.76"></script>
   <script defer src="core/agent-animations.js"></script>
   <script defer src="core/selector.js"></script>
-  <script defer src="core/main.js?v=0.24.59"></script>
+  <script defer src="core/main.js?v=0.24.76"></script>
 </head>
 <body>
   <div id="startup-loading" class="startup-loading" role="status" aria-live="polite" aria-label="Carregando AssistenteHall">
@@ -51,7 +50,7 @@
   </main>
   <section id="settings" aria-labelledby="panel-title" hidden>
     <header class="panel-header">
-      <div class="panel-heading"><h1 id="panel-title">AssistenteHall</h1><span class="eyebrow">0.24.61</span><p id="selected-agent-name">Carregando…</p></div>
+      <div class="panel-heading"><h1 id="panel-title">AssistenteHall</h1><span class="eyebrow">0.24.76</span><p id="selected-agent-name">Carregando…</p></div>
       <button id="close-panel" type="button" aria-label="Fechar painel">Fechar · F1</button>
     </header>
     <nav class="panel-tabs" role="tablist" aria-label="Seções do painel">
@@ -68,8 +67,8 @@
     </nav>
     <section id="pane-mascotes" class="tab-pane" role="tabpanel" aria-labelledby="tab-mascotes">
       <p class="tab-description">Escolha o Agent que quer editar e teste. Defina também quais Agents vão se alternar nas mensagens.</p>
-      <fieldset id="agent-options"><legend>Agents</legend><div id="agent-grid"></div></fieldset>
       <fieldset class="agent-presenter-options"><legend>Agents que apresentam mensagens</legend><p class="tab-description">Marque um ou mais Agents. Eles se alternam a cada anúncio, incluindo masterizações e anúncios locais.</p><div id="agent-presenter-grid" role="group" aria-label="Agents que apresentam mensagens"></div></fieldset>
+      <fieldset id="agent-options"><legend>Agents</legend><div id="agent-grid"></div></fieldset>
       <fieldset class="agent-editor">
         <legend>Editar Agent selecionado</legend>
         <label for="agent-edit-name">Nome exibido</label>
@@ -99,7 +98,6 @@
             <label><input type="radio" name="agent-message-mode" value="rotate"><span>Alternar entre as escolhidas</span></label>
           </div>
         </div>
-
       </fieldset>
       <fieldset class="agent-animation-editor">
         <legend>Animações do anúncio</legend>
@@ -119,7 +117,10 @@
     </section>
     <section id="pane-merlin-fila" class="tab-pane" role="tabpanel" aria-labelledby="tab-merlin-fila" hidden>
       <h2>Masterizações coletadas</h2>
-      <p class="tab-description">A coleta é somente leitura e atualiza automaticamente mesmo com o painel fechado. Confira cada mensagem como ficará no balão; as pendentes são anunciadas da mais antiga para a mais recente.</p>
+      <details ontoggle="if(this.open &amp;&amp; !this.querySelector('iframe').hasAttribute('src')) this.querySelector('iframe').src=this.querySelector('iframe').dataset.url"><summary>Consultar platina por membro e jogo</summary>
+        <iframe title="Consulta de platinas" data-url="https://assistentelive.cleitondiles32.workers.dev/consulta" style="width:100%;height:24rem;border:0"></iframe>
+      </details>
+      <p class="tab-description">A lista mostra todas as masterizações da planilha. A coleta é somente leitura e atualiza automaticamente mesmo com o painel fechado; apenas as platinas após o marco atual entram na fila de anúncios.</p>
       <section class="sheet-collection-controls" aria-labelledby="sheet-collection-title">
         <div class="sheet-collection-heading">
           <div><h3 id="sheet-collection-title">Coleta de masterizações</h3><p class="tab-description">Leitura direta da aba Masterizações do Google Sheets. As preferências são salvas neste OBS.</p></div>
@@ -200,7 +201,6 @@
         <div class="merlin-option-list">
           <label class="merlin-option"><input type="radio" name="local-image-position" value="left"><span>À esquerda do texto</span></label>
           <label class="merlin-option"><input type="radio" name="local-image-position" value="right"><span>À direita do texto</span></label>
-
         </div>
       </fieldset>
       <fieldset class="local-announcement-editor">
@@ -249,12 +249,26 @@
         </div>
       </fieldset>
       <div class="merlin-setting merlin-template-setting">
-        <label for="merlin-template">Modelo da mensagem</label>
+        <div class="merlin-message-tabs" role="tablist" aria-label="Tipo de mensagem">
+          <button id="merlin-message-tab-mastery" class="merlin-message-tab" type="button" role="tab" aria-selected="true" aria-controls="merlin-message-panel-mastery" tabindex="0" data-merlin-message-tab="mastery">Masterização</button>
+          <button id="merlin-message-tab-recruit" class="merlin-message-tab" type="button" role="tab" aria-selected="false" aria-controls="merlin-message-panel-recruit" tabindex="-1" data-merlin-message-tab="recruit">Recrutamento</button>
+        </div>
+        <div id="merlin-message-panel-mastery" class="merlin-message-panel" role="tabpanel" aria-labelledby="merlin-message-tab-mastery" data-merlin-message-panel="mastery">
+          <label for="merlin-template">Modelo da mensagem</label>
           <textarea id="merlin-template" rows="2" maxlength="500" spellcheck="false">{Membro} platinou {Jogo} ({Console}) em {Tempo} — {Evento}</textarea>
-        <p class="setting-hint">Formatação: {b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}.</p>
+          <p class="setting-hint">Formatação: {b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}.</p>
           <p class="setting-hint">Chaves: <code>{Membro}</code>, <code>{Jogo}</code>, <code>{Console}</code>, <code>{Tempo}</code> e <code>{Evento}</code>.</p>
-          <label for="merlin-reading-seconds">Tempo de exibição da mensagem (segundos)</label>
-          <input id="merlin-reading-seconds" type="number" min="3" max="120" step="1" value="12">
+        </div>
+        <div id="merlin-message-panel-recruit" class="merlin-message-panel recruit-message-settings" role="tabpanel" aria-labelledby="merlin-message-tab-recruit" data-merlin-message-panel="recruit" hidden>
+          <label class="merlin-option"><input id="recruits-enabled" type="checkbox" checked><span>Anunciar platinas que tornam um recruta membro</span></label>
+          <label for="recruits-template">Texto da mensagem de recruta</label>
+          <textarea id="recruits-template" rows="3" maxlength="500" spellcheck="false">{Membro} entrou para o Hall ao platinar
+{Jogo} ({Console})
+em {Tempo}</textarea>
+          <p class="setting-hint">Formatação: {b}negrito{/b}, {i}itálico{/i}, {u}sublinhado{/u} e {s}riscado{/s}. Use também {Membro}, {Jogo}, {Console}, {Tempo} e {Evento}.</p>
+        </div>
+        <label for="merlin-reading-seconds">Tempo de exibição da mensagem (segundos)</label>
+        <input id="merlin-reading-seconds" type="number" min="3" max="120" step="1" value="12">
       </div>
         <fieldset class="merlin-setting merlin-options">
           <legend>Tamanho do texto</legend>
@@ -301,7 +315,6 @@
           <div class="merlin-option-list">
             <label class="merlin-option"><input type="radio" name="merlin-member-image-shape" value="square"><span>Quadrada</span></label>
             <label class="merlin-option"><input type="radio" name="merlin-member-image-shape" value="circle"><span>Redonda</span></label>
-
           </div>
         </fieldset>
         <fieldset class="merlin-setting merlin-options">
@@ -342,9 +355,10 @@
             <label class="merlin-option"><input type="radio" name="merlin-history-policy" value="new-only"><span>Só as novas, a partir de agora</span></label>
             <label class="merlin-option"><input type="radio" name="merlin-history-policy" value="unannounced"><span>Todas que ainda não foram anunciadas</span></label>
           </div>
+          <p class="setting-hint">O marco começa quando o OBS abre ou você clica em Atualizar. Só entram platinas cuja data de conquista seja posterior a esse momento.</p>
         </fieldset>
       <div class="merlin-preview" id="merlin-preview" role="button" tabindex="0" aria-label="Trocar exemplo aleatório da prévia" title="Clique para trocar o exemplo">
-        <strong>Prévia · clique para trocar o exemplo</strong>
+        <strong id="merlin-preview-title">Prévia de masterização · clique para trocar o exemplo</strong>
         <div class="merlin-preview-content">
           <div id="merlin-preview-bubble" class="merlin-preview-bubble message-width-max">
             <p id="merlin-template-preview" aria-live="polite">Blumzeira platinou Penguin Land (Master System) em 810 horas e 53 minutos — Penguin Land (Master System)</p>
@@ -361,7 +375,7 @@
     </section>
     <section id="pane-configuracoes" class="tab-pane" role="tabpanel" aria-labelledby="tab-configuracoes" hidden>
       <h2>Configurações do AssistenteHall</h2>
-      <p class="tab-description">Exporte suas preferências para usar em outro OBS ou cole um JSON salvo. Restaurar os padrões reinicia apenas as configurações; o cache e o histórico de masterizações ficam preservados.</p>
+      <p class="tab-description">Exporte suas preferências para usar em outro OBS ou importe um arquivo salvo. Restaurar os padrões reinicia apenas as configurações; o cache e o histórico de masterizações ficam preservados.</p>
       <fieldset class="welcome-settings">
         <legend>Mensagem de boas-vindas</legend>
         <label class="merlin-option"><input id="welcome-enabled" type="checkbox" checked><span>Mostrar quando o AssistenteHall iniciar</span></label>
@@ -372,6 +386,8 @@
       <div class="configuration-actions">
         <button id="export-settings" type="button">Exportar configurações</button>
         <button id="copy-settings" type="button" hidden>Copiar JSON</button>
+        <button id="import-settings" type="button">Importar configurações</button>
+        <input id="settings-file" type="file" accept="application/json,.json" hidden>
         <button id="restore-settings" type="button" class="restore-settings-button">Restaurar padrões</button>
       </div>
       <div id="restore-settings-confirmation" class="restore-settings-confirmation" role="group" aria-label="Confirmar restauração" hidden>
@@ -407,7 +423,16 @@
           </div>
           <div class="merlin-sound-file"><button type="button" data-sound-choose>Escolher arquivo de áudio</button><button type="button" data-sound-remove>Remover arquivo</button><input type="file" data-sound-file accept="audio/*" hidden><span class="setting-hint" data-sound-name>Nenhum arquivo personalizado carregado. Máximo: 650 KB.</span></div>
           <label>Volume <output data-sound-volume-value>35%</output></label><input type="range" data-sound-volume min="0" max="100" step="1" value="35"><button type="button" data-sound-test>Testar som</button>
-
+        </fieldset>
+        <fieldset class="sound-category-setting" data-sound-category="recruits">
+          <legend>Recrutamentos</legend>
+          <label class="merlin-option"><input type="checkbox" data-sound-enabled><span>Ativar som</span></label>
+          <strong>Som escolhido</strong>
+          <div class="merlin-sound-type-options" role="radiogroup" aria-label="Som dos recrutamentos">
+            <label class="merlin-option"><input type="radio" name="sound-type-recruits" value="magic"><span>Sino mágico</span></label><label class="merlin-option"><input type="radio" name="sound-type-recruits" value="arcade"><span>Arcade</span></label><label class="merlin-option"><input type="radio" name="sound-type-recruits" value="coin"><span>Moeda retrô</span></label><label class="merlin-option"><input type="radio" name="sound-type-recruits" value="soft"><span>Aviso suave</span></label><label class="merlin-option"><input type="radio" name="sound-type-recruits" value="custom"><span>Arquivo personalizado</span></label>
+          </div>
+          <div class="merlin-sound-file"><button type="button" data-sound-choose>Escolher arquivo de áudio</button><button type="button" data-sound-remove>Remover arquivo</button><input type="file" data-sound-file accept="audio/*" hidden><span class="setting-hint" data-sound-name>Nenhum arquivo personalizado carregado. Máximo: 650 KB.</span></div>
+          <label>Volume <output data-sound-volume-value>100%</output></label><input type="range" data-sound-volume min="0" max="100" step="1" value="100"><button type="button" data-sound-test>Testar som</button>
         </fieldset>
         <fieldset class="sound-category-setting" data-sound-category="announcements">
           <legend>Anúncios</legend>
@@ -450,6 +475,8 @@
   </section>
 </body>
 </html>
+
+
 
 
 
