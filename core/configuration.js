@@ -3,7 +3,7 @@
   const app = window.AssistenteLive;
   const FORMAT = 'AssistenteLive.settings';
   const VERSION = 1;
-  const WELCOME_DEFAULT = 'Olá! Seja bem-vindo(a) à live. Pressione F1 para abrir o menu.';
+  const WELCOME_DEFAULT = 'Olá! Seja bem-vindo(a) ao AssistenteHall.\nPressione F1 para abrir o menu.\nCaso esteja no OBS, abra pelo interagir.\n';
   const KEYS = [
     'AssistenteLive.activeTab',
     'AssistenteLive.agentOverrides.v1',
@@ -28,6 +28,64 @@
     'AssistenteLive.nextEventPosition',
     'AssistenteLive.merlinCollection.v1'
   ];
+  const DEFAULT_EVENT_KEYS = [
+    ['created', 'Evento de teste do Hall'],
+    ['hall-general', 'Speedball 2: Brutal Deluxe'],
+    ['hall-general', 'Shaq-Fu'],
+    ['hall-general', 'Coletatona'],
+    ['hall-general', 'Penguin Land (Master System)'],
+    ['hall-general', 'WiiVERSO'],
+    ['hall-general', 'Filhos do Pinguim']
+  ].map(([source, id]) => JSON.stringify([source, id]));
+  const DEFAULT_SETTINGS = {
+    'AssistenteLive.activeTab': 'configuracoes',
+    'AssistenteLive.agentOverrides.v1': JSON.stringify(Object.fromEntries(
+      ['merlin', 'clippy', 'bonzi', 'courtney', 'earl', 'genie', 'peedy', 'robby', 'rover', 'victor'].map(id => [id, {
+        width: 304,
+        positions: id === 'merlin'
+          ? ['bottom-left', 'top-left', 'bottom-right', 'top-right']
+          : ['bottom-left', 'bottom-right', 'top-right', 'top-left']
+      }])
+    )),
+    'AssistenteLive.agentAnimationSequence.v1': JSON.stringify({
+      merlin: { entry: ['SHOW'], message: ['CONGRATULATE', 'ANNOUNCE'], exit: ['HIDE'] },
+      clippy: { entry: ['SHOW'], message: ['CONGRATULATE', 'SAVE', 'SEARCHING', 'PROCESSING', 'WAVE', 'WRITING', 'THINKING'], exit: ['HIDE', 'SENDMAIL'] }
+    }),
+    'AssistenteLive.agentMessageAnimationMode.v1': 'rotate',
+    'AssistenteLive.welcomeEnabled.v1': 'true',
+    'AssistenteLive.welcomeMessage.v1': WELCOME_DEFAULT,
+    'AssistenteLive.selectedAgent': 'clippy',
+    'AssistenteLive.presentationAgents.v1': JSON.stringify(['merlin', 'clippy']),
+    'AssistenteLive.merlinSettings.v1': JSON.stringify({
+      template: '{i}[{Evento}]{/i}\n{b}{Membro}{/b} platinou\n{Jogo} ({Console})\nem {Tempo}',
+      recruitsEnabled: true,
+      recruitsTemplate: '{i}[{Evento}]{/i}\n{b}{Membro}{/b} platinou\n{Jogo} ({Console})\nem {Tempo}',
+      timeFormat: 'dhm', historyPolicy: 'new-only', showGameImage: true, showMemberImage: true,
+      memberPosition: 'left', gamePosition: 'right', imageSize: 'auto', memberImageShape: 'circle',
+      bubbleWidth: '800', fontSize: 'large', fontFamily: 'trebuchet', bubbleColor: '#fffdf5', readingSeconds: 10,
+      soundSettings: {
+        masterizations: { enabled: true, type: 'magic', volume: 100, customSoundData: '', customSoundName: '' },
+        recruits: { enabled: true, type: 'arcade', volume: 100, customSoundData: '', customSoundName: '' },
+        announcements: { enabled: true, type: 'coin', volume: 100, customSoundData: '', customSoundName: '' },
+        localAnnouncements: { enabled: true, type: 'soft', volume: 100, customSoundData: '', customSoundName: '' }
+      },
+      consoleNames: { 'Genesis/Mega Drive': '' }, memberNames: { '27': '' }
+    }),
+    'AssistenteLive.selectedEventMessages.v1': JSON.stringify({ selected: DEFAULT_EVENT_KEYS, known: DEFAULT_EVENT_KEYS }),
+    'AssistenteLive.localAnnouncements.v1': JSON.stringify([{
+      id: 'local-mwm943xv-a89xsi', message: 'Bora beber Água?\nSeu rim agradece.',
+      imageUrl: 'https://media.tenor.com/swupXv9JQ24AAAAM/shaq-water.gif'
+    }]),
+    'AssistenteLive.localEventReadingSeconds.v1': '5',
+    'AssistenteLive.localIntervalMinutes': '30',
+    'AssistenteLive.localNextEventPosition': '1',
+    'AssistenteLive.nextEventPosition': '5'
+  };
+  try {
+    for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
+      if (localStorage.getItem(key) === null) localStorage.setItem(key, value);
+    }
+  } catch { /* Padrões internos continuam disponíveis se o armazenamento estiver bloqueado. */ }
   const TAB_NAMES = ['mascotes', 'merlin', 'anuncios', 'anuncios-locais', 'merlin-fila', 'sons', 'membros', 'console', 'configuracoes'];
   const EXAMPLES = ['curto', 'longo', 'saudacao'];
 
@@ -35,7 +93,7 @@
   function validStoredValue(key, raw, selector) {
     if (raw === null) return true;
     if (typeof raw !== 'string' || raw.length > (key === 'AssistenteLive.merlinSettings.v1' ? 3000000 : 1000000)) return false;
-    if (key === 'AssistenteLive.activeTab') return TAB_NAMES.includes(raw);
+    if (key === 'AssistenteLive.activeTab') return TAB_NAMES.includes(raw) || raw === 'recrutas';
     if (key === 'AssistenteLive.messageExample') return EXAMPLES.includes(raw);
     if (key === 'AssistenteLive.welcomeEnabled.v1') return raw === 'true' || raw === 'false';
     if (key === 'AssistenteLive.welcomeMessage.v1') return raw.length <= 350;
@@ -78,6 +136,7 @@
     }
     if (key === 'AssistenteLive.localAnnouncements.v1') return Array.isArray(value) && value.length <= 50
       && value.every(item => isObject(item) && typeof item.id === 'string' && item.id.length <= 100
+        && (item.title === undefined || typeof item.title === 'string' && item.title.length <= 100)
         && typeof item.message === 'string' && item.message.trim().length > 0 && item.message.length <= 350
         && typeof item.imageUrl === 'string' && item.imageUrl.length <= 2048
         && (!item.imageUrl || /^https?:\/\//i.test(item.imageUrl)));
@@ -91,6 +150,7 @@
     constructor(selector) {
       this.selector = selector;
       this.status = document.getElementById('configuration-status');
+      this.fileInput = document.getElementById('settings-file');
       this.exportData = document.getElementById('settings-export-data');
       this.exportLabel = document.getElementById('settings-export-label');
       this.importData = document.getElementById('settings-import-data');
@@ -109,6 +169,7 @@
       this.welcomeMessage.addEventListener('change', () => this.saveWelcomeSettings());
       document.getElementById('export-settings').addEventListener('click', () => this.export());
       document.getElementById('copy-settings').addEventListener('click', () => this.copyExport());
+      document.getElementById('import-settings').addEventListener('click', () => this.fileInput.click());
       document.getElementById('import-pasted-settings').addEventListener('click', () => this.importPastedSettings());
       document.getElementById('restore-settings').addEventListener('click', () => this.restoreDefaults());
       this.confirmRestoreButton.addEventListener('click', () => this.confirmRestoreDefaults());
@@ -116,6 +177,7 @@
         this.restoreConfirmation.hidden = true;
         this.status.textContent = 'Restauração cancelada. Suas configurações foram mantidas.';
       });
+      this.fileInput.addEventListener('change', () => { void this.importSelectedFile(); });
     }
 
     saveWelcomeSettings() {
@@ -134,38 +196,36 @@
         const documentData = { format: FORMAT, version: VERSION, exportedAt: new Date().toISOString(), settings };
         const json = JSON.stringify(documentData, null, 2);
         const filename = `AssistenteHall-configuracoes-${new Date().toISOString().slice(0, 10)}.json`;
-        // OBS injects this object into its Browser Source. Its CEF save picker can
-        // create a file but silently leave it empty, so use the copy fallback there.
-        if (window.obsstudio) {
-          this.showExportData(json, 'No OBS, o seletor pode criar um arquivo vazio. Copie o JSON e salve pelo Bloco de Notas.');
-          return;
-        }
         if (typeof window.showSaveFilePicker !== 'function') {
           this.showExportData(json);
           return;
         }
-        let writable = null;
-        try {
-          const handle = await window.showSaveFilePicker({
-            suggestedName: filename,
-            types: [{ description: 'Arquivo de configurações JSON', accept: { 'application/json': ['.json'] } }]
-          });
-          writable = await handle.createWritable();
-          await writable.write(json);
-          await writable.close();
-          const savedFile = await handle.getFile();
-          if (savedFile.size !== new Blob([json]).size) {
-            this.showExportData(json, 'O arquivo criado ficou vazio ou incompleto.');
+        if (typeof window.showSaveFilePicker === 'function') {
+          let writable = null;
+          try {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: filename,
+              types: [{ description: 'Arquivo de configurações JSON', accept: { 'application/json': ['.json'] } }]
+            });
+            writable = await handle.createWritable();
+            await writable.write(json);
+            await writable.close();
+            const savedFile = await handle.getFile();
+            if (savedFile.size !== new Blob([json]).size) {
+              this.showExportData(json, 'O arquivo criado ficou vazio ou incompleto.');
+              return;
+            }
+            this.status.textContent = 'Configurações salvas no local escolhido. O cache de masterizações não foi incluído.';
+            return;
+          } catch (error) {
+            try { await writable?.abort(); } catch {}
+            if (error.name === 'AbortError') {
+              this.status.textContent = 'Exportação cancelada.';
+              return;
+            }
+            this.showExportData(json, 'O OBS não conseguiu gravar o arquivo diretamente.');
             return;
           }
-          this.status.textContent = 'Configurações salvas no local escolhido. O cache de masterizações não foi incluído.';
-        } catch (error) {
-          try { await writable?.abort(); } catch {}
-          if (error.name === 'AbortError') {
-            this.status.textContent = 'Exportação cancelada.';
-            return;
-          }
-          this.showExportData(json, 'O OBS não conseguiu gravar o arquivo diretamente.');
         }
       } catch (error) {
         this.status.textContent = `Não foi possível exportar as configurações: ${error.message}`;
@@ -189,6 +249,22 @@
       this.status.textContent = copied
         ? 'JSON copiado. Cole no Bloco de Notas e salve como AssistenteHall-configuracoes.json.'
         : 'O JSON está selecionado. Pressione Ctrl+C, cole no Bloco de Notas e salve como AssistenteHall-configuracoes.json.';
+    }
+
+    async importSelectedFile() {
+      const file = this.fileInput.files?.[0];
+      this.fileInput.value = '';
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        this.status.textContent = 'O arquivo é grande demais para importar (máximo de 4 MB).';
+        return;
+      }
+      try {
+        const parsed = JSON.parse(await file.text());
+        this.applyImportedSettings(parsed);
+      } catch (error) {
+        this.status.textContent = `Não foi possível importar o arquivo: ${error.message}`;
+      }
     }
 
     importPastedSettings() {
@@ -225,7 +301,10 @@
 
     confirmRestoreDefaults() {
       try {
-        for (const key of KEYS) localStorage.removeItem(key);
+        for (const key of KEYS) {
+          if (Object.prototype.hasOwnProperty.call(DEFAULT_SETTINGS, key)) localStorage.setItem(key, DEFAULT_SETTINGS[key]);
+          else localStorage.removeItem(key);
+        }
         this.restoreConfirmation.hidden = true;
         this.status.textContent = 'Configurações restauradas para o padrão. Cache e histórico preservados; recarregando…';
         setTimeout(() => window.location.reload(), 350);
@@ -235,3 +314,5 @@
     }
   };
 })();
+
+

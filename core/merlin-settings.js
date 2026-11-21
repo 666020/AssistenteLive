@@ -5,15 +5,23 @@
   const MEMBER_IMAGE_CACHE_KEY = 'AssistenteLive.hallMemberImageVersion.v1';
   const CUSTOM_SOUND_MAX_BYTES = 650 * 1024;
   const SOUND_TYPES = new Set(['magic', 'arcade', 'coin', 'soft', 'custom']);
-  const SOUND_CATEGORIES = ['masterizations', 'announcements', 'localAnnouncements'];
+  const SOUND_CATEGORIES = ['masterizations', 'recruits', 'announcements', 'localAnnouncements'];
+  const SOUND_DEFAULTS = {
+    masterizations: { enabled: true, type: 'magic', volume: 100 },
+    recruits: { enabled: true, type: 'arcade', volume: 100 },
+    announcements: { enabled: true, type: 'coin', volume: 100 },
+    localAnnouncements: { enabled: true, type: 'soft', volume: 100 }
+  };
   const defaultSoundSettings = () => Object.fromEntries(SOUND_CATEGORIES.map(category => [category, {
-    enabled: false, type: 'magic', volume: 35, customSoundData: '', customSoundName: ''
+    ...SOUND_DEFAULTS[category], customSoundData: '', customSoundName: ''
   }]));
   let memberImageVersion = '1';
   let announcementAudioContext = null;
   let customSoundPlayer = null;
   const DEFAULTS = {
-    template: '{Evento} {Membro} platinou\n{Jogo} ({Console})\nem {Tempo}',
+    template: '{i}[{Evento}]{/i}\n{b}{Membro}{/b} platinou\n{Jogo} ({Console})\nem {Tempo}',
+    recruitsEnabled: true,
+    recruitsTemplate: '{i}[{Evento}]{/i}\n{b}{Membro}{/b} platinou\n{Jogo} ({Console})\nem {Tempo}',
     timeFormat: 'dhm',
     historyPolicy: 'new-only',
     showGameImage: true,
@@ -22,16 +30,21 @@
     gamePosition: 'right',
     imageSize: 'auto',
     memberImageShape: 'circle',
-    bubbleWidth: '1000',
-    fontSize: 'medium',
+    bubbleWidth: '800',
+    fontSize: 'large',
     fontFamily: 'trebuchet',
     bubbleColor: '#fffdf5',
-    readingSeconds: 12,
+    readingSeconds: 10,
     soundSettings: defaultSoundSettings(),
     consoleNames: {},
     memberNames: {}
   };
   const EMPTY_PREVIEW = { Membro: '', Jogo: '', Console: '', Tempo: '', Evento: '', raUser: '', image: '' };
+  const EMPTY_RECRUIT_PREVIEW = {
+    key: 'recruit-preview-sample', memberId: '', member: 'Náufrago Nato', Membro: 'Náufrago Nato',
+    Jogo: 'Alex Kidd in the Enchanted Castle', Console: 'Mega Drive', Tempo: 99126,
+    Evento: 'Recrutamento — tornou-se membro do Hall', memberImage: '', image: ''
+  };
   const TIME_FORMATS = new Set(['human', 'dhm', 'hms', 'seconds']);
   const HISTORY_POLICIES = new Set(['new-only', 'unannounced']);
   const IMAGE_POSITIONS = new Set(['left', 'right']);
@@ -145,6 +158,8 @@
   app.MerlinSettings = class {
     constructor() {
       this.template = document.getElementById('merlin-template');
+      this.recruitsEnabledInput = document.getElementById('recruits-enabled');
+      this.recruitsTemplateInput = document.getElementById('recruits-template');
       this.readingTimeInput = document.getElementById('merlin-reading-seconds');
       this.soundCards = new Map([...document.querySelectorAll('[data-sound-category]')].map(card => [card.dataset.soundCategory, card]));
       this.timeFormats = [...document.querySelectorAll('input[name="merlin-time-format"]')];
@@ -163,20 +178,43 @@
       this.showGameImage = document.getElementById('merlin-show-game-image');
       this.showMemberImage = document.getElementById('merlin-show-member-image');
       this.preview = document.getElementById('merlin-template-preview');
+      this.previewTitle = document.getElementById('merlin-preview-title');
       this.previewBubble = document.getElementById('merlin-preview-bubble');
       this.bubbleColorPicker = document.getElementById('merlin-bubble-color-picker');
       this.bubbleColorHex = document.getElementById('merlin-bubble-color-hex');
       this.bubbleColorReset = document.getElementById('merlin-bubble-color-reset');
       this.bubbleColorSwatches = [...document.querySelectorAll('[data-bubble-color]')];
       this.previewControl = document.getElementById('merlin-preview');
+      this.messageTabs = [...document.querySelectorAll('[data-merlin-message-tab]')];
+      this.messagePanels = [...document.querySelectorAll('[data-merlin-message-panel]')];
       this.status = document.getElementById('merlin-settings-status');
       this.previewIndex = -1;
       this.previewRecords = [];
-      this.announcementPreviewRecords = [];
+      this.previewRecordSets = { mastery: [], recruit: [] };
+      this.currentMessageType = 'mastery';
+      this.previewSelectionTouched = { mastery: false, recruit: false };
       this.previewRecord = EMPTY_PREVIEW;
       this.previewKey = '';
       this.value = this.load();
       this.template.value = this.value.template;
+      this.recruitsEnabledInput.checked = this.value.recruitsEnabled;
+      this.recruitsTemplateInput.value = this.value.recruitsTemplate;
+      this.recruitsEnabledInput.addEventListener('change', () => this.save());
+      this.recruitsTemplateInput.addEventListener('input', () => this.save());
+      for (const tab of this.messageTabs) {
+        tab.addEventListener('click', () => this.selectMessageType(tab.dataset.merlinMessageTab));
+        tab.addEventListener('keydown', event => {
+          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+          event.preventDefault();
+          const currentIndex = this.messageTabs.indexOf(tab);
+          const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? this.messageTabs.length - 1
+            : (currentIndex + (event.key === 'ArrowRight' ? 1 : this.messageTabs.length - 1)) % this.messageTabs.length;
+          const nextTab = this.messageTabs[nextIndex];
+          this.selectMessageType(nextTab.dataset.merlinMessageTab);
+          nextTab.focus();
+        });
+      }
+      this.selectMessageType('mastery');
       this.readingTimeInput.value = String(this.value.readingSeconds);
       for (const category of SOUND_CATEGORIES) this.syncSoundCard(category);
       for (const option of this.timeFormats) option.checked = option.value === this.value.timeFormat;
@@ -240,13 +278,37 @@
         volume.addEventListener('input', () => { output.value = `${volume.value}%`; output.textContent = `${volume.value}%`; this.save({ refreshPanels: false }); });
         card.querySelector('[data-sound-test]').addEventListener('click', () => { void playAnnouncementSound(category, true); });
       }
-      for (const option of [...this.timeFormats, ...this.historyPolicies, ...this.memberPositions, ...this.gamePositions, ...this.imageSizes, ...this.bubbleWidths, ...this.memberImageShapes, ...this.fontSizes, ...this.fontFamilies, this.showGameImage, this.showMemberImage]) option.addEventListener('change', () => this.save());
+      for (const option of [...this.timeFormats, ...this.memberPositions, ...this.gamePositions, ...this.imageSizes, ...this.memberImageShapes, ...this.fontSizes, ...this.fontFamilies, this.showGameImage, this.showMemberImage]) option.addEventListener('change', () => this.save());
+      for (const option of this.historyPolicies) option.addEventListener('change', () => {
+        this.save({ refreshPanels: false });
+        this.selector.merlinPanel?.applyHistoryPolicy(true, true);
+      });
+      for (const option of this.bubbleWidths) option.addEventListener('change', () => {
+        this.save({ refreshPanels: false });
+        app.eventsPanel?.renderEvents();
+        this.selector.merlinPanel?.refreshPreviewWidths();
+      });
       this.previewControl.addEventListener('click', () => this.nextPreview());
       this.previewControl.addEventListener('keydown', event => {
         if (event.key !== 'Enter' && event.key !== ' ') return;
         event.preventDefault(); this.nextPreview();
       });
       this.refreshPreview();
+    }
+    selectMessageType(type) {
+      const selectedType = type === 'recruit' ? 'recruit' : 'mastery';
+      for (const tab of this.messageTabs) {
+        const selected = tab.dataset.merlinMessageTab === selectedType;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      }
+      for (const panel of this.messagePanels) panel.hidden = panel.dataset.merlinMessagePanel !== selectedType;
+      this.previewControl.hidden = false;
+      this.currentMessageType = selectedType;
+      this.previewTitle.textContent = selectedType === 'recruit'
+        ? 'Prévia de recrutamento · clique para trocar o exemplo'
+        : 'Prévia de masterização · clique para trocar o exemplo';
+      this.setPreviewType(selectedType);
     }
     load() {
       try {
@@ -255,11 +317,11 @@
         const legacySoundType = SOUND_TYPES.has(saved.soundType) ? saved.soundType : DEFAULTS.soundType;
         const legacySoundData = typeof saved.customSoundData === 'string' && saved.customSoundData.startsWith('data:audio/') && saved.customSoundData.length <= 940000 ? saved.customSoundData : '';
         const soundSettings = Object.fromEntries(SOUND_CATEGORIES.map(category => {
-          const item = saved.soundSettings?.[category];
+          const item = saved.soundSettings?.[category] || (category === 'recruits' ? saved.soundSettings?.masterizations : null);
           if (item && typeof item === 'object' && !Array.isArray(item)) return [category, {
-            enabled: typeof item.enabled === 'boolean' ? item.enabled : false,
-            type: SOUND_TYPES.has(item.type) && (item.type !== 'custom' || (typeof item.customSoundData === 'string' && item.customSoundData.startsWith('data:audio/') && item.customSoundData.length <= 940000)) ? item.type : 'magic',
-            volume: Number.isInteger(item.volume) && item.volume >= 0 && item.volume <= 100 ? item.volume : 35,
+            enabled: typeof item.enabled === 'boolean' ? item.enabled : SOUND_DEFAULTS[category].enabled,
+            type: SOUND_TYPES.has(item.type) && (item.type !== 'custom' || (typeof item.customSoundData === 'string' && item.customSoundData.startsWith('data:audio/') && item.customSoundData.length <= 940000)) ? item.type : SOUND_DEFAULTS[category].type,
+            volume: Number.isInteger(item.volume) && item.volume >= 0 && item.volume <= 100 ? item.volume : SOUND_DEFAULTS[category].volume,
             customSoundData: typeof item.customSoundData === 'string' && item.customSoundData.startsWith('data:audio/') && item.customSoundData.length <= 940000 ? item.customSoundData : '',
             customSoundName: typeof item.customSoundName === 'string' ? item.customSoundName.slice(0, 120) : ''
           }];
@@ -274,6 +336,8 @@
         }));
         return {
           template: /\{(?:RA|Origem|Data)\}/.test(savedTemplate) ? DEFAULTS.template : savedTemplate.slice(0, 500),
+          recruitsEnabled: typeof saved.recruitsEnabled === 'boolean' ? saved.recruitsEnabled : DEFAULTS.recruitsEnabled,
+          recruitsTemplate: typeof saved.recruitsTemplate === 'string' ? saved.recruitsTemplate.slice(0, 500) : DEFAULTS.recruitsTemplate,
           timeFormat: TIME_FORMATS.has(saved.timeFormat) ? saved.timeFormat : DEFAULTS.timeFormat,
           historyPolicy: HISTORY_POLICIES.has(saved.historyPolicy) ? saved.historyPolicy : DEFAULTS.historyPolicy,
           showGameImage: typeof saved.showGameImage === 'boolean' ? saved.showGameImage : DEFAULTS.showGameImage,
@@ -314,6 +378,8 @@
       }));
       this.value = {
         template: this.template.value.slice(0, 500),
+        recruitsEnabled: this.recruitsEnabledInput.checked,
+        recruitsTemplate: this.recruitsTemplateInput.value.slice(0, 500),
         timeFormat: TIME_FORMATS.has(this.selected(this.timeFormats)) ? this.selected(this.timeFormats) : DEFAULTS.timeFormat,
         historyPolicy: HISTORY_POLICIES.has(this.selected(this.historyPolicies)) ? this.selected(this.historyPolicies) : DEFAULTS.historyPolicy,
         showGameImage: this.showGameImage.checked,
@@ -347,6 +413,8 @@
         this.selector.merlinPanel?.render();
       }
     }
+    isRecruitment(record) { return /^recrutamento\b/i.test(String(record?.activity || '').trim()); }
+    templateFor(record) { return this.isRecruitment(record) ? this.value.recruitsTemplate : this.value.template; }
     selected(options) { return options.find(option => option.checked)?.value || ''; }
     normalizeBubbleColor(value) { return /^#[0-9a-f]{6}$/i.test(String(value || '').trim()) ? String(value).trim().toLowerCase() : ''; }
     applyBubbleColor(element, color = this.value.bubbleColor) {
@@ -479,36 +547,34 @@
     }
     imageLayout() { return { size: this.value.imageSize, memberShape: this.value.memberImageShape, bubbleWidth: this.value.bubbleWidth, fontSize: this.value.fontSize, fontFamily: this.value.fontFamily, bubbleColor: this.value.bubbleColor }; }
     setPreviewRecords(records) {
-      const previousKey = this.previewKey;
-      const masteryRecords = records.filter(record => !this.isMemberHidden(record.memberId)).map(record => ({
-        key: record.key, memberId: record.memberId || '', member: record.member || '', Membro: this.memberName(record.memberId, record.member), Jogo: record.game || '', Console: record.console || '',
-        console: record.console || '', Tempo: record.time ?? '', Evento: record.activity || '', raUser: record.raUser || '', memberImage: record.memberImage || '', image: record.image || ''
-      }));
-      this.previewRecords = [...masteryRecords, ...this.announcementPreviewRecords];
-      if (!this.previewRecords.length) {
-        this.previewIndex = -1; this.previewKey = ''; this.previewRecord = EMPTY_PREVIEW;
-      } else {
-        this.previewIndex = Math.max(0, this.previewRecords.findIndex(record => record.key === previousKey));
-        this.previewRecord = this.previewRecords[this.previewIndex];
-        this.previewKey = this.previewRecord.key;
+      const masteryRecords = [];
+      const recruitRecords = [];
+      for (const record of records) {
+        if (this.isMemberHidden(record.memberId)) continue;
+        const item = {
+          key: record.key, detectedAt: record.detectedAt || '', memberId: record.memberId || '', member: record.member || '', Membro: this.memberName(record.memberId, record.member), Jogo: record.game || '', Console: record.console || '',
+          console: record.console || '', Tempo: record.time ?? '', Evento: record.activity || '', raUser: record.raUser || '', memberImage: record.memberImage || '', image: record.image || ''
+        };
+        (this.isRecruitment(record) ? recruitRecords : masteryRecords).push(item);
       }
-      this.refreshPreview();
+      const newestFirst = (a, b) => (Date.parse(b.detectedAt) || 0) - (Date.parse(a.detectedAt) || 0);
+      masteryRecords.sort(newestFirst);
+      recruitRecords.sort(newestFirst);
+      this.previewRecordSets = { mastery: masteryRecords, recruit: recruitRecords };
+      this.setPreviewType(this.currentMessageType);
     }
-    setAnnouncementPreviewRecords(events) {
+    setPreviewType(type) {
       const previousKey = this.previewKey;
-      this.announcementPreviewRecords = events.map(event => ({
-        key: `announcement:${event.source || ''}:${event.title}:${event.message}`,
-        announcement: true, title: event.title || '', message: event.message || '', image: event.imageUrl || event.imageUrls?.[0] || '', imageUrls: event.imageUrls || [],
-        Membro: '', Jogo: event.title || '', Console: '', Tempo: '', Evento: ''
-      }));
-      const masteryRecords = this.previewRecords.filter(record => !record.announcement);
-      this.previewRecords = [...masteryRecords, ...this.announcementPreviewRecords];
-      if (this.previewRecords.length) {
-        const nextIndex = this.previewRecords.findIndex(record => record.key === previousKey);
-        this.previewIndex = nextIndex >= 0 ? nextIndex : 0;
-        this.previewRecord = this.previewRecords[this.previewIndex];
-        this.previewKey = this.previewRecord.key;
-      } else { this.previewIndex = -1; this.previewRecord = EMPTY_PREVIEW; this.previewKey = ''; }
+      const selectedType = type === 'recruit' ? 'recruit' : 'mastery';
+      this.currentMessageType = selectedType;
+      this.previewRecords = [...(this.previewRecordSets[selectedType] || [])];
+      if (!this.previewRecords.length && selectedType === 'recruit') this.previewRecords = [{ ...EMPTY_RECRUIT_PREVIEW }];
+      const nextIndex = this.previewSelectionTouched[selectedType]
+        ? this.previewRecords.findIndex(record => record.key === previousKey)
+        : -1;
+      this.previewIndex = nextIndex >= 0 ? nextIndex : this.previewRecords.length ? 0 : -1;
+      this.previewRecord = this.previewIndex >= 0 ? this.previewRecords[this.previewIndex] : EMPTY_PREVIEW;
+      this.previewKey = this.previewRecord.key || '';
       this.refreshPreview();
     }
     nextPreview() {
@@ -518,18 +584,18 @@
       this.previewIndex = next;
       this.previewRecord = this.previewRecords[next];
       this.previewKey = this.previewRecord.key;
+      this.previewSelectionTouched[this.currentMessageType] = true;
       this.refreshPreview();
     }
     refreshPreview() {
       this.applyBubbleColor(this.previewBubble);
+      const template = this.currentMessageType === 'recruit' ? this.recruitsTemplateInput.value : this.template.value;
       const previewText = this.previewRecords.length
-        ? this.previewRecord.announcement
-          ? this.previewRecord.message
-          : render(this.template.value, {
-            ...this.previewRecord,
-            Membro: this.memberName(this.previewRecord.memberId, this.previewRecord.member || this.previewRecord.Membro),
-            Console: this.consoleName(this.previewRecord.console)
-          }, this.selected(this.timeFormats) || DEFAULTS.timeFormat)
+        ? render(template, {
+          ...this.previewRecord,
+          Membro: this.memberName(this.previewRecord.memberId, this.previewRecord.member || this.previewRecord.Membro),
+          Console: this.consoleName(this.previewRecord.console)
+        }, this.selected(this.timeFormats) || DEFAULTS.timeFormat)
         : 'Aguardando masterizações da planilha…';
       this.preview.replaceChildren();
       app.appendFormattedText(this.preview, previewText);
@@ -544,11 +610,7 @@
       this.previewBubble.classList.add(`message-font-${this.value.fontFamily}`);
       this.previewBubble.classList.remove('member-image-shape-square', 'member-image-shape-circle');
       this.previewBubble.classList.add(`member-image-shape-${this.value.memberImageShape}`);
-      const images = (this.previewRecord.announcement
-        ? this.value.showGameImage && this.previewRecord.image
-          ? [{ url: this.previewRecord.image, urls: this.previewRecord.imageUrls, type: 'game', position: this.eventImagePosition(), alt: `Imagem de ${this.previewRecord.title}` }]
-          : []
-        : this.imageOptions(this.previewRecord)).map(spec => {
+      const images = this.imageOptions(this.previewRecord).map(spec => {
         const image = document.createElement('img');
         image.src = spec.url; image.alt = spec.alt;
         image.className = `event-image ${spec.type}-image image-${spec.position}`;
@@ -564,9 +626,6 @@
       if (this.value.imageSize === 'auto') {
         app.fitImagesToText(this.previewBubble, this.preview);
       }
-    }
-    eventImagePosition() {
-      try { return localStorage.getItem('AssistenteLive.eventImagePosition.v1') === 'right' ? 'right' : 'left'; } catch { return 'left'; }
     }
   };
   app.merlinMessage = { ...app.merlinMessage, hallMemberPicture };

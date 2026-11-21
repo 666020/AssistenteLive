@@ -134,8 +134,9 @@
   })().catch(error => {
     app.state = 'error';
     app.error = error.message;
+    const loadingScreen = document.getElementById('startup-loading');
+    if (loadingScreen) loadingScreen.hidden = true;
     document.getElementById('stage').hidden = true;
-    document.getElementById('startup-loading').hidden = true;
     document.getElementById('panel-status').textContent = 'Falha ao iniciar. Confira os arquivos da pasta e atualize a fonte.';
     document.getElementById('settings').hidden = false;
     console.error('AssistenteHall: falha ao iniciar.', error);

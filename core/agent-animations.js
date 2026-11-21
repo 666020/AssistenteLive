@@ -16,7 +16,7 @@
       localStorage.setItem(MODE_STORAGE_KEY, mode);
       return mode;
     }
-    catch { return 'loop'; }
+    catch { return 'rotate'; }
   };
 
   function readSequences() {
